@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Team Workflow — Diagrams</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f6f3;
+    --bg3: #f0efe9;
+    --text: #1a1a18;
+    --text2: #5a5a54;
+    --text3: #9a9990;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.06);
+
+    --purple-50: #EEEDFE; --purple-200: #AFA9EC; --purple-600: #534AB7; --purple-800: #3C3489; --purple-900: #26215C;
+    --teal-50: #E1F5EE; --teal-200: #5DCAA5; --teal-600: #0F6E56; --teal-800: #085041; --teal-900: #04342C;
+    --coral-50: #FAECE7; --coral-200: #F0997B; --coral-600: #993C1D; --coral-800: #712B13; --coral-900: #4A1B0C;
+    --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-600: #185FA5; --blue-800: #0C447C; --blue-900: #042C53;
+    --amber-50: #FAEEDA; --amber-200: #EF9F27; --amber-600: #854F0B; --amber-800: #633806; --amber-900: #412402;
+    --red-50: #FCEBEB; --red-200: #F09595; --red-600: #A32D2D; --red-800: #791F1F;
+    --green-50: #EAF3DE; --green-200: #97C459; --green-600: #3B6D11; --green-800: #27500A;
+    --gray-50: #F1EFE8; --gray-200: #B4B2A9; --gray-600: #5F5E5A; --gray-800: #444441;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #242422; --bg3: #2c2c29;
+      --text: #e8e6df; --text2: #a8a69f; --text3: #6a6860;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.05);
+      --purple-50: #26215C; --purple-200: #534AB7; --purple-800: #CECBF6; --purple-900: #EEEDFE;
+      --teal-50: #04342C; --teal-200: #0F6E56; --teal-800: #9FE1CB; --teal-900: #E1F5EE;
+      --coral-50: #4A1B0C; --coral-200: #993C1D; --coral-800: #F5C4B3; --coral-900: #FAECE7;
+      --blue-50: #042C53; --blue-200: #185FA5; --blue-800: #B5D4F4; --blue-900: #E6F1FB;
+      --amber-50: #412402; --amber-200: #854F0B; --amber-800: #FAC775; --amber-900: #FAEEDA;
+      --red-50: #501313; --red-200: #A32D2D; --red-800: #F7C1C1;
+      --green-50: #173404; --green-200: #3B6D11; --green-800: #C0DD97;
+      --gray-50: #2C2C2A; --gray-200: #5F5E5A; --gray-800: #D3D1C7;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 48px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .subtitle { font-size: 13px; color: var(--text3); margin-bottom: 48px; }
+  .section { margin-bottom: 64px; }
+  .section-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .section-num { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .08em; }
+
+  /* — SWIMLANE — */
+  .swimlane { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .swimlane th, .swimlane td { padding: 0; }
+  .phase-row th { background: var(--bg2); border: 1px solid var(--border); padding: 8px 10px; font-size: 11px; font-weight: 600; color: var(--text2); text-align: center; }
+  .phase-row th.corner { background: transparent; border-color: transparent; }
+  .phase-row th.w1 { border-top: 3px solid var(--coral-200); }
+  .phase-row th.w2 { border-top: 3px solid var(--blue-200); }
+  .phase-label { font-size: 12px; font-weight: 600; }
+  .phase-days { font-size: 10px; font-weight: 400; color: var(--text3); margin-top: 2px; }
+  .week-header th { font-size: 10px; font-weight: 500; color: var(--text3); text-align: center; padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border); letter-spacing: .04em; }
+  .week-header th.corner { background: transparent; border-color: transparent; }
+  .role-label { width: 80px; padding: 10px 10px 10px 0 !important; font-size: 11px; font-weight: 600; text-align: right; vertical-align: middle; white-space: nowrap; color: var(--text2); border: none !important; background: transparent !important; }
+  .cell { vertical-align: top; padding: 5px !important; border: 1px solid var(--border2); width: calc((100% - 80px) / 6); }
+  .empty { background: transparent; }
+  .card { border-radius: 7px; padding: 8px 9px; height: 100%; min-height: 70px; border-width: 1px; border-style: solid; }
+  .card-title { font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .card-sub { font-size: 10px; margin-top: 3px; line-height: 1.4; opacity: .7; }
+
+  .ux .card { background: var(--purple-50); border-color: var(--purple-200); }
+  .ux .card .card-title { color: var(--purple-800); }
+  .ux .card .card-sub { color: var(--purple-600); }
+  .pm .card { background: var(--teal-50); border-color: var(--teal-200); }
+  .pm .card .card-title { color: var(--teal-800); }
+  .pm .card .card-sub { color: var(--teal-600); }
+  .ds .card { background: var(--coral-50); border-color: var(--coral-200); }
+  .ds .card .card-title { color: var(--coral-800); }
+  .ds .card .card-sub { color: var(--coral-600); }
+  .en .card { background: var(--blue-50); border-color: var(--blue-200); }
+  .en .card .card-title { color: var(--blue-800); }
+  .en .card .card-sub { color: var(--blue-600); }
+  .mk .card { background: var(--amber-50); border-color: var(--amber-200); }
+  .mk .card .card-title { color: var(--amber-800); }
+  .mk .card .card-sub { color: var(--amber-600); }
+
+  .role-tag { display: inline-block; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 20px; margin-bottom: 8px; }
+  .ux-tag { background: var(--purple-50); color: var(--purple-800); border: 1px solid var(--purple-200); }
+  .pm-tag { background: var(--teal-50); color: var(--teal-800); border: 1px solid var(--teal-200); }
+  .ds-tag { background: var(--coral-50); color: var(--coral-800); border: 1px solid var(--coral-200); }
+  .en-tag { background: var(--blue-50); color: var(--blue-800); border: 1px solid var(--blue-200); }
+  .mk-tag { background: var(--amber-50); color: var(--amber-800); border: 1px solid var(--amber-200); }
+
+  /* — PRIORITY — */
+  .priority-section { margin-bottom: 28px; }
+  .priority-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; text-transform: uppercase; }
+  .prob-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .prob-card { border-radius: 10px; padding: 12px 14px; border: 1px solid; }
+  .prob-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px; display: inline-block; margin-bottom: 7px; }
+  .prob-title { font-size: 12px; font-weight: 600; line-height: 1.5; }
+  .prob-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+  .badge { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+  .b-daily { background: var(--teal-50); color: var(--teal-800); }
+  .b-spread-hi { background: var(--purple-50); color: var(--purple-800); }
+  .b-spread-md { background: var(--gray-50); color: var(--gray-800); }
+  .b-now { background: var(--red-50); color: var(--red-800); }
+  .b-chronic { background: var(--amber-50); color: var(--amber-800); }
+  .b-future { background: var(--blue-50); color: var(--blue-800); }
+
+  .p1-card { background: var(--coral-50); border-color: var(--coral-200); }
+  .p1-card .prob-tag { background: var(--coral-200); color: var(--coral-900); }
+  .p1-card .prob-title { color: var(--coral-800); }
+  .p2-card { background: var(--amber-50); border-color: var(--amber-200); }
+  .p2-card .prob-tag { background: var(--amber-200); color: var(--amber-900); }
+  .p2-card .prob-title { color: var(--amber-800); }
+  .p3-card { background: var(--blue-50); border-color: var(--blue-200); }
+  .p3-card .prob-tag { background: var(--blue-200); color: var(--blue-900); }
+  .p3-card .prob-title { color: var(--blue-800); }
+
+  /* dep map */
+  .dep-box { border: 1px dashed var(--border); border-radius: 10px; padding: 16px 20px; margin: 20px 0; }
+  .dep-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .dep-row:last-child { margin-bottom: 0; }
+  .dep-node { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .dn-root { background: var(--coral-50); color: var(--coral-800); border: 1px solid var(--coral-200); }
+  .dn-mid { background: var(--amber-50); color: var(--amber-800); border: 1px solid var(--amber-200); }
+  .dn-end { background: var(--blue-50); color: var(--blue-800); border: 1px solid var(--blue-200); }
+  .arr { color: var(--text3); font-size: 16px; }
+
+  /* mvp box */
+  .mvp-box { background: var(--bg2); border-radius: 12px; padding: 20px 22px; border: 2px solid var(--coral-200); }
+  .mvp-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+  .mvp-items { display: flex; flex-direction: column; gap: 9px; }
+  .mvp-row { display: flex; gap: 10px; align-items: flex-start; }
+  .mvp-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral-200); margin-top: 5px; flex-shrink: 0; }
+  .mvp-text { font-size: 12px; color: var(--text2); line-height: 1.6; }
+  .mvp-text strong { color: var(--text); font-weight: 600; }
+  .out-box { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+  .out-label { font-size: 9px; font-weight: 600; letter-spacing: .06em; color: var(--text3); text-transform: uppercase; margin-bottom: 8px; }
+  .out-row { display: flex; gap: 8px; margin-bottom: 5px; font-size: 11px; color: var(--text3); }
+  .out-row:last-child { margin-bottom: 0; }
+  .out-x { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>AI Team Workflow</h1>
+<p class="subtitle">문제 분석 & 제품 팀 다이어그램 — 2025</p>
+
+<!-- — DIAGRAM 1 — -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>제품 팀 2주 런칭 스윔레인</h2>
+  </div>
+
+  <table class="swimlane">
+    <thead>
+      <tr class="week-header">
+        <th class="corner"></th>
+        <th colspan="3">— Week 1 —</th>
+        <th colspan="3">— Week 2 —</th>
+      </tr>
+      <tr class="phase-row">
+        <th class="corner"></th>
+        <th class="w1"><div class="phase-label">발견</div><div class="phase-days">Day 1–2</div></th>
+        <th class="w1"><div class="phase-label">기획</div><div class="phase-days">Day 3–4</div></th>
+        <th class="w1"><div class="phase-label">검증</div><div class="phase-days">Day 5–6</div></th>
+        <th class="w2"><div class="phase-label">개발</div><div class="phase-days">Day 7–10</div></th>
+        <th class="w2"><div class="phase-label">QA & 마무리</div><div class="phase-days">Day 11–12</div></th>
+        <th class="w2"><div class="phase-label">런칭</div><div class="phase-days">Day 13–14</div></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="role-label"><span class="role-tag ux-tag">UX 리서치</span></td>
+        <td class="cell ux"><div class="card"><div class="card-title">사용자 인터뷰</div><div class="card-sub">5–8명 빠른 인터뷰, 경쟁사 분석</div></div></td>
+        <td class="cell ux"><div class="card"><div class="card-title">인사이트 정리</div><div class="card-sub">핵심 페인포인트 도출 & 공유</div></div></td>
+        <td class="cell ux"><div class="card"><div class="card-title">사용성 테스트</div><div class="card-sub">프로토타입 검증, 결과 공유</div></div></td>
+        <td class="cell empty"></td>
+        <td class="cell empty"></td>
+        <td class="cell empty"></td>
+      </tr>
+      <tr>
+        <td class="role-label"><span class="role-tag pm-tag">PM</span></td>
+        <td class="cell pm"><div class="card"><div class="card-title">문제 정의 & 목표</div><div class="card-sub">What / Why / Who 프레이밍</div></div></td>
+        <td class="cell pm"><div class="card"><div class="card-title">PRD 작성</div><div class="card-sub">스코프 확정, 요구사항 정의</div></div></td>
+        <td class="cell pm"><div class="card"><div class="card-title">요구사항 검토</div><div class="card-sub">피드백 반영, 스코프 조정</div></div></td>
+        <td class="cell pm"><div class="card"><div class="card-title">스프린트 관리</div><div class="card-sub">데일리 싱크, 블로커 해소</div></div></td>
+        <td class="cell pm"><div class="card"><div class="card-title">런칭 기준 확정</div><div class="card-sub">버그 트리아지, Go/No-go</div></div></td>
+        <td class="cell pm"><div class="card"><div class="card-title">런칭 공지 & 회고</div><div class="card-sub">내부 공지, 다음 스프린트 계획</div></div></td>
+      </tr>
+      <tr>
+        <td class="role-label"><span class="role-tag ds-tag">디자인</span></td>
+        <td class="cell empty"></td>
+        <td class="cell ds"><div class="card"><div class="card-title">와이어프레임</div><div class="card-sub">핵심 플로우 스케치</div></div></td>
+        <td class="cell ds"><div class="card"><div class="card-title">Hi-Fi 목업</div><div class="card-sub">프로토타입 제작 & 이터레이션</div></div></td>
+        <td class="cell ds"><div class="card"><div class="card-title">디자인 QA 지원</div><div class="card-sub">개발 산출물 검토, 수정 전달</div></div></td>
+        <td class="cell ds"><div class="card"><div class="card-title">최종 UI 검수</div><div class="card-sub">픽셀 퍼펙트 체크</div></div></td>
+        <td class="cell ds"><div class="card"><div class="card-title">런칭 에셋 완성</div><div class="card-sub">SNS 이미지, 배너 제작</div></div></td>
+      </tr>
+      <tr>
+        <td class="role-label"><span class="role-tag en-tag">엔지니어</span></td>
+        <td class="cell empty"></td>
+        <td class="cell en"><div class="card"><div class="card-title">기술 검토</div><div class="card-sub">실현 가능성, 아키텍처 설계</div></div></td>
+        <td class="cell empty"></td>
+        <td class="cell en"><div class="card"><div class="card-title">개발 구현</div><div class="card-sub">4일 집중 스프린트</div></div></td>
+        <td class="cell en"><div class="card"><div class="card-title">버그 수정 & 테스트</div><div class="card-sub">QA 이슈 해결, 성능 확인</div></div></td>
+        <td class="cell en"><div class="card"><div class="card-title">프로덕션 배포</div><div class="card-sub">배포 & 실시간 모니터링</div></div></td>
+      </tr>
+      <tr>
+        <td class="role-label"><span class="role-tag mk-tag">마케팅</span></td>
+        <td class="cell empty"></td>
+        <td class="cell mk"><div class="card"><div class="card-title">포지셔닝</div><div class="card-sub">타겟 고객, 메시지 방향 정의</div></div></td>
+        <td class="cell mk"><div class="card"><div class="card-title">메시지 정교화</div><div class="card-sub">리서치 기반 카피 다듬기</div></div></td>
+        <td class="cell mk"><div class="card"><div class="card-title">콘텐츠 제작</div><div class="card-sub">랜딩 페이지, 이메일 초안</div></div></td>
+        <td class="cell mk"><div class="card"><div class="card-title">런칭 준비</div><div class="card-sub">채널별 스케줄링, 최종 검토</div></div></td>
+        <td class="cell mk"><div class="card"><div class="card-title">마케팅 실행</div><div class="card-sub">공개 발행 & 성과 트래킹</div></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- — DIAGRAM 2 — -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>문제 우선순위 & MVP 스콥</h2>
+  </div>
+
+  <div class="priority-section">
+    <div class="priority-label">Priority 1 — 지금 피 남</div>
+    <div class="prob-grid">
+      <div class="prob-card p1-card">
+        <div class="prob-tag">Main 1 · Sub 1-1</div>
+        <div class="prob-title">컨텍스트가 채팅창에서 사라진다</div>
+        <div class="prob-badges">
+          <span class="badge b-daily">매일 발생</span>
+          <span class="badge b-spread-hi">전파력 높음</span>
+          <span class="badge b-now">지금 피 남</span>
+        </div>
+      </div>
+      <div class="prob-card p1-card">
+        <div class="prob-tag">Main 1 · Sub 1-2</div>
+        <div class="prob-title">결과물만 넘어가고 판단 근거가 없다</div>
+        <div class="prob-badges">
+          <span class="badge b-daily">매일 발생</span>
+          <span class="badge b-spread-hi">전파력 높음</span>
+          <span class="badge b-now">지금 피 남</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="priority-section">
+    <div class="priority-label">Priority 2 — 만성 비효율</div>
+    <div class="prob-grid">
+      <div class="prob-card p2-card">
+        <div class="prob-tag">Main 1 · Sub 1-3</div>
+        <div class="prob-title">팀 지식으로 누적되지 않는다</div>
+        <div class="prob-badges">
+          <span class="badge b-spread-md">전파력 중간</span>
+          <span class="badge b-chronic">만성 비효율</span>
+        </div>
+      </div>
+      <div class="prob-card p2-card">
+        <div class="prob-tag">Main 2 · Sub 2-2</div>
+        <div class="prob-title">AI 아웃풋 신뢰도 식별 불가</div>
+        <div class="prob-badges">
+          <span class="badge b-spread-md">전파력 중간</span>
+          <span class="badge b-chronic">만성 비효율</span>
+        </div>
+      </div>
+      <div class="prob-card p2-card">
+        <div class="prob-tag">Main 2 · Sub 2-3</div>
+        <div class="prob-title">팀원마다 AI 활용 수준 편차 발생</div>
+        <div class="prob-badges">
+          <span class="badge b-spread-md">전파력 낮음</span>
+          <span class="badge b-chronic">만성 비효율</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="priority-section">
+    <div class="priority-label">Priority 3 — Future risk</div>
+    <div class="prob-grid">
+      <div class="prob-card p3-card">
+        <div class="prob-tag">Main 2 · Sub 2-1</div>
+        <div class="prob-title">프롬프트 기록 방법이 없다</div>
+        <div class="prob-badges">
+          <span class="badge b-spread-hi">전파력 높음</span>
+          <span class="badge b-future">Future risk</span>
+        </div>
+      </div>
+      <div class="prob-card p3-card">
+        <div class="prob-tag">Main 2 · Sub 2-3~4</div>
+        <div class="prob-title">Agent 컨텍스트 전달 및 오류 검수 체계 없음</div>
+        <div class="prob-badges">
+          <span class="badge b-spread-hi">전파력 매우 높음</span>
+          <span class="badge b-future">Future risk</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dep-box">
+    <div class="priority-label" style="margin-bottom:12px;">의존성 지도</div>
+    <div class="dep-row">
+      <div class="dep-node dn-root">컨텍스트 저장 + 판단 근거 붙이기</div>
+      <span class="arr">→</span>
+      <div class="dep-node dn-mid">신뢰도 식별 가능</div>
+      <span class="arr">→</span>
+      <div class="dep-node dn-end">팀 지식 누적</div>
+    </div>
+    <div class="dep-row">
+      <div class="dep-node dn-root">컨텍스트 저장 + 판단 근거 붙이기</div>
+      <span class="arr">→</span>
+      <div class="dep-node dn-mid">Agent 컨텍스트 전달 설계</div>
+      <span class="arr">→</span>
+      <div class="dep-node dn-end">Agent 검수 체계</div>
+    </div>
+  </div>
+
+  <div class="mvp-box">
+    <div class="mvp-title">MVP: "판단이 붙은 핸드오프" 구조 만들기</div>
+    <div class="mvp-items">
+      <div class="mvp-row">
+        <div class="mvp-dot"></div>
+        <div class="mvp-text"><strong>AI로 무언가를 만들었을 때</strong>, 결과물 + 왜 이렇게 했는지 (고민, 선택지, 기각 이유) 가 함께 저장된다</div>
+      </div>
+      <div class="mvp-row">
+        <div class="mvp-dot"></div>
+        <div class="mvp-text"><strong>다음 사람이 받을 때</strong>, 결과물만 보는 게 아니라 그 판단의 맥락도 같이 받는다</div>
+      </div>
+      <div class="mvp-row">
+        <div class="mvp-dot"></div>
+        <div class="mvp-text"><strong>저장 방식은 최소한으로</strong> — 별도 문서 작성 없이, AI 대화에서 자동 또는 아주 가벼운 트리거로 추출된다</div>
+      </div>
+    </div>
+    <div class="out-box">
+      <div class="out-label">MVP 스콥 밖 (v2 이후)</div>
+      <div class="out-row"><span class="out-x">✕</span> 팀 지식 베이스 누적 및 검색 — 인프라 먼저 검증 후</div>
+      <div class="out-row"><span class="out-x">✕</span> AI 아웃풋 신뢰도 레이블링 시스템</div>
+      <div class="out-row"><span class="out-x">✕</span> Agent 워크플로우 설계 — 사람 핸드오프 구조 먼저</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

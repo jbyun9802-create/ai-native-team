@@ -1,14 +1,39 @@
-# UXR Traces
+---
+date: 2026-02-17
+type: role-overview
+role: uxr
+topic: UX 리서치 역할 정의 및 담당자
+project: ai-native-team
+---
 
-This folder contains AI conversation traces and decision-making processes from the UX Research perspective.
+# UX 리서치
 
-## Session Traces
+## 담당자
+- Ahrom Kim 김아롬 (헬스케어 회사, 미국)
 
-- [Session 1: User Research Planning](traces/session-1-user-research.md)
-- [Session 2: Validation Framework](traces/session-2-validation.md)
+## 역할
+- 사용자 인터뷰 및 리서치
+- 인사이트 도출 및 페인포인트 분석
+- 사용성 테스트 및 검증
+- 리서치 기반 의사결정 지원
 
-## Key Insights
+## AI 대화 기록 & 의사결정
 
-- Focus on user-centered AI integration
-- Emphasis on ethical AI usage and user trust
-- Research methodologies adapted for AI-assisted workflows
+이 폴더의 `traces/` 에 UX 리서치 관점의 기록을 저장합니다.
+
+### 기록하는 법
+
+- Claude Code에서 작업 후 `/save` 입력하면 자동으로 기록 생성
+- 수동으로 할 경우: [TEMPLATE-trace.md](../TEMPLATE-trace.md) 복사 → `traces/YYYY-MM-DD-주제.md`로 저장
+- 예시: `traces/2026-03-15-페르소나-분석.md`
+
+### 언제 기록하나?
+- 모든 대화를 기록할 필요 없음
+- **다른 팀원에게 영향을 주는 결정**을 했을 때
+- **나중에 "왜 이렇게 했지?"라고 물어볼 만한 것**이 있을 때
+- AI 대화에서 **생각이 바뀐 순간**이 있었을 때
+
+## 핵심 관심사
+- 사용자 중심 AI 통합
+- AI 활용의 윤리적 고려 및 사용자 신뢰
+- AI 기반 워크플로우에 맞춘 리서치 방법론

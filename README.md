@@ -1,61 +1,94 @@
 # AI-Native Team Project
 
-This repository documents our exploration of AI-first team collaboration workflows. We're building a small product to solve one of the identified problems while demonstrating AI-native processes.
+## 이 레포지토리는
 
-## Webinar Purpose and Target
+이 레포지토리는 우리 팀의 **지식과 의사결정을 저장하는 곳**이자, **프로덕트 코드를 관리하는 곳**입니다.
 
-**Purpose:** Demonstrate the full potential of AI-native team collaboration - showing how far teams can go when AI is integrated as a core part of their workflow, not just a tool.
+- 팀의 모든 지식, 맥락, 의사결정 근거를 Git에 기록합니다
+- 각 팀원의 AI 에이전트가 이 레포를 참조하여 팀의 컨텍스트를 공유합니다
+- 프로덕트 코드도 함께 관리됩니다
 
-**Target Audience:** Anyone interested in better utilizing AI in their professional work, from tech-savvy professionals to executives who are less familiar with AI but want to understand its business impact.
+---
 
-**North Star:** "AI로 일하는 팀은 이렇게까지 가능하다" (Teams working with AI can achieve this level of capability)
+## 웨비나
 
-## Product Purpose and Target
+### 목적
 
-**Purpose:** Build a solution to solve our team's specific problem of maintaining context and decision rationale when handing off AI-generated work between team members.
+AI-native하게 일하는 팀이 어디까지 가능한지 보여줍니다. AI를 단순한 도구가 아닌 팀 워크플로우의 핵심으로 통합했을 때, 팀이 어떤 수준까지 도달할 수 있는지를 시연합니다.
 
-**Target:** Our team and similar AI-native teams facing collaboration challenges with AI tools.
+### 타겟 오디언스
 
-**Problem Statement:** "개인이 AI를 쓰는 방법은 알지만, AI가 만든 것을 어떻게 다음으로 넘길지를 설계하는 방법을 모른다. 팀원들이 각자 AI와 대화하는데 그 컨텍스트가 개인 채팅창에서 사라진다. 저 사람의 고민이 뭔지, 우선순위가 뭔지, 왜 저런 선택을 했는지 모르겠다."
+AI를 현업에 더 잘 활용하고 싶은 모든 사람. 테크에 익숙한 실무자부터 AI에 덜 익숙한 임원/관리자까지.
 
-## Repository Structure
+### 노스스타
 
-- `docs/` - Project documentation
-  - `roles/` - Role-specific documentation and AI conversation traces
-    - `pm/` - Product Management perspective and traces
-    - `gtm/` - Go-To-Market perspective and traces
-    - `uxr/` - UX Research perspective and traces  
-    - `design/` - Design perspective and traces
-    - `engineering/` - Engineering perspective and traces
-  - `shared/` - Cross-team resources
-    - `meetings/` - Meeting notes and summaries
-    - `diagrams/` - Workflow diagrams and visualizations
-    - `problem-analysis/` - Detailed problem breakdown and prioritization
-- `README.md` - This file
+> "AI로 일하는 팀은 이렇게까지 가능하다"
 
-## Team Workflow
+---
 
-See [Team Workflow Diagram](docs/shared/diagrams/team-workflow.html) for our 2-week product launch process.
+## 프로덕트
 
-## Meetings
+### 목적
 
-- [Kickoff Meeting](docs/shared/meetings/kickoff.md)
-- [Workflow Discussion](docs/shared/meetings/workflow-discussion.md)
-- [Problem Selection](docs/shared/meetings/problem-selection.md)
-- [Current Session](docs/shared/meetings/current-session.md)
+우리 팀이 직접 겪고 있는 문제를 해결하기 위한 제품을 만듭니다.
 
-## Next Steps
+### 문제 정의
 
-1. Finalize problem selection
-2. Define team conventions
-3. Start product development following AI-native workflow
+> "개인이 AI를 쓰는 방법은 알지만, AI가 만든 것을 어떻게 다음으로 넘길지를 설계하는 방법을 모른다. 팀원들이 각자 AI와 대화하는데 그 컨텍스트가 개인 채팅창에서 사라진다. 저 사람의 고민이 뭔지, 우선순위가 뭔지, 왜 저런 선택을 했는지 모르겠다."
 
-## Team Members
+### 타겟
 
-All team members are Korean professionals exploring AI-native workflows:
+우리 팀, 그리고 비슷한 문제를 겪고 있는 AI-native 팀들.
 
-- **Robin (변진영)** - PM/GTM, Bridgeleaf (New York, USA)
-- **김건희** - Engineering, 투스텝스어헤드 (Seoul, Korea)
-- **dddesign (우석)** - Design, Data Driven Design Agency (Seoul, Korea)
-- **Ahrom Kim** - UX Research, Healthcare Company (USA)
-- **Nina Jin** - PM, Fintech/Platform (USA) - Optional participant
+### 상세 문서
+
+- [문제 분석 및 우선순위](docs/product/planning/problem-analysis.md)
+- [팀 워크플로우 & MVP 다이어그램](docs/product/diagrams/team-workflow.html)
+
+---
+
+## 레포지토리 구조
+
+```
+ai-native-team/
+├── README.md
+├── docs/
+│   ├── shared/
+│   │   └── meetings/        # 미팅 기록 (원문 + 정리)
+│   │       ├── README.md    # 미팅 기록 가이드
+│   │       └── YYYY-MM-DD-주제/
+│   │           ├── raw-chat.txt         # 채팅 원문
+│   │           ├── raw-transcript.txt   # 트랜스크립트 원문
+│   │           └── summary.md           # 정리 (선택)
+│   ├── product/             # 프로덕트 문서 (단계별 정리)
+│   │   ├── README.md        # 폴더 구조 가이드
+│   │   ├── planning/        # 기획: PRD, 문제 분석
+│   │   ├── design/          # 디자인: 와이어프레임, 목업
+│   │   ├── specs/           # 개발 명세: API, 데이터 모델
+│   │   ├── validation/      # 검증: 테스트, 피드백
+│   │   └── diagrams/        # 다이어그램 (단계 무관)
+│   └── roles/               # 역할별 작업 컨텍스트
+│       ├── pm/
+│       ├── gtm/
+│       ├── uxr/
+│       ├── design/
+│       └── engineering/
+└── src/                     # 프로덕트 코드 (추후)
+```
+
+## 미팅 기록
+
+미팅 원문(채팅, 트랜스크립트)을 그대로 보관합니다. → [가이드](docs/shared/meetings/README.md)
+
+- [킥오프 (2/16)](docs/shared/meetings/2026-02-16-kickoff/)
+- [워크플로우 논의 (2/17)](docs/shared/meetings/2026-02-17-workflow-discussion/)
+- [문제 선정 (3/14)](docs/shared/meetings/2026-03-14-problem-selection/)
+- [현재 세션 (3/14)](docs/shared/meetings/2026-03-14-current-session/)
+
+## 팀 멤버
+
+- **Robin (변진영)** - PM/GTM, Bridgeleaf (뉴욕, 미국)
+- **김건희** - 엔지니어링, 투스텝스어헤드 (서울, 한국)
+- **dddesign (우석)** - 디자인, Data Driven Design Agency (서울, 한국)
+- **Ahrom Kim** - UX 리서치, Healthcare Company (미국)
+- **Nina Jin** - PM, Fintech/Platform (미국) - 관점 공유 역할
