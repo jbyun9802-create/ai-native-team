@@ -87,8 +87,7 @@ ai-native-team/
 
 ## 팀 멤버
 
-- **Robin (변진영)** - PM/GTM, Bridgeleaf (뉴욕, 미국)
+- **Robin** - PM/GTM, Bridgeleaf (뉴욕, 미국)
 - **김건희** - 엔지니어링, 투스텝스어헤드 (서울, 한국)
 - **dddesign (우석)** - 디자인, Data Driven Design Agency (서울, 한국)
 - **Ahrom Kim** - UX 리서치, Healthcare Company (미국)
-- **Nina Jin** - PM, Fintech/Platform (미국) - 관점 공유 역할
