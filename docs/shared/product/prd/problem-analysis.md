@@ -4,6 +4,7 @@ type: product
 role: all
 topic: 문제 분석 - 7개 서브문제 정의 및 MVP 스코프
 project: ai-native-team
+category: prd
 tags: [문제분석, 우선순위, mvp, 핸드오프, 컨텍스트]
 ---
 

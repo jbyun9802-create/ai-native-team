@@ -36,7 +36,7 @@ tags: [mvp, 투표, 문제정의]
 | topic | ✅ | 한 줄 요약 (검색 키워드 역할) |
 | project | ✅ | 프로젝트 이름 |
 | tags | 선택 | 자유 태그 (나중에 연관 문서 찾기용) |
-| phase | product만 | `planning` / `design` / `spec` / `validation` |
+| category | product만 | `prd` / `spec` / `storybook` / `research` / `validation` |
 | status | spec만 | `draft` / `review` / `approved` / `deprecated` |
 | method | research만 | `interview` / `survey` / `usability-test` / `competitive-analysis` |
 | participant-count | research만 | 리서치 대상 인원 수 |
