@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamBrain Assessment</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh}
+.bar{display:flex;align-items:center;padding:12px 24px;background:#111;border-bottom:1px solid #222;position:sticky;top:0;z-index:100}
+.logo{font-weight:700;color:#6366f1;font-size:16px}
+.pr{margin-left:auto;display:flex;gap:3px;align-items:center}
+.pr-d{width:8px;height:8px;border-radius:50%;background:#333;transition:.3s}
+.pr-d.dn{background:#6366f1}.pr-d.cu{background:#6366f1;width:20px;border-radius:4px}
+.pr-l{margin-left:10px;font-size:12px;color:#666}
+.pg{display:none;padding:24px;max-width:760px;margin:0 auto}.pg.on{display:block}
+.nr{background:#1a1a2e;border:1px solid #2d2d5e;border-radius:12px;padding:16px 20px;margin-bottom:20px;font-size:14px;line-height:1.6;color:#c4c4f0}
+.cd{background:#161616;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:12px}
+h2{font-size:20px;margin-bottom:16px}
+h3{font-size:15px;color:#999;margin:16px 0 8px}
+.bt{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;transition:.2s}
+.bp{background:#6366f1;color:#fff}.bp:hover{background:#5558e6}
+.bg{background:none;color:#666}.bg:hover{color:#fff}
+.bp:disabled{background:#333;color:#666;cursor:not-allowed}
+.nv{display:flex;justify-content:space-between;margin-top:24px;padding-top:16px;border-top:1px solid #1a1a1a}
+input[type=text],input[type=email]{width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-size:14px;outline:none}
+input:focus{border-color:#6366f1}
+.ro{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.ri{padding:10px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;cursor:pointer;transition:.2s;font-size:13px}
+.ri:hover{border-color:#6366f1}.ri.sl{border-color:#6366f1;background:#1a1a2e}
+.rr{display:flex;gap:6px}.rr .ri{flex:1;text-align:center}
+.ck{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px}
+.cb{width:18px;height:18px;border:1px solid #444;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cb.on{background:#6366f1;border-color:#6366f1}.cb.on::after{content:'✓';color:#fff;font-size:12px}
+/* FC */
+.fc-n{font-size:13px;color:#666;margin-bottom:8px;text-align:center}
+.fc-p{display:flex;gap:12px;margin-bottom:12px}
+.fc-s{flex:1;padding:14px;background:#1a1a1a;border:1px solid #333;border-radius:10px;font-size:13px;line-height:1.5;display:flex;align-items:center;justify-content:center;text-align:center;min-height:70px}
+.fc-sc{display:flex;gap:0;justify-content:center;margin-bottom:4px}
+.fc-sc label{display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 10px}
+.fc-sc input{display:none}
+.fc-sc .dt{width:18px;height:18px;border-radius:50%;border:2px solid #444;transition:.2s}
+.fc-sc label:hover .dt{border-color:#6366f1}
+.fc-sc input:checked~.dt{background:#6366f1;border-color:#6366f1}
+.fc-sc .dl{font-size:9px;color:#666;margin-top:3px;white-space:nowrap}
+.fc-sc label:nth-child(3) .dt{width:14px;height:14px}
+/* Report */
+.rpt{background:#161616;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:16px}
+.rpt-h{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.tg{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;margin:2px}
+.t-s{background:#3b1111;color:#f87171}.t-t{background:#3b2e11;color:#fbbf24}.t-a{background:#113b1f;color:#4ade80}
+.tb{display:inline-block;padding:6px 14px;background:#1a1a2e;border:1px solid #6366f1;border-radius:8px;font-size:16px;font-weight:700;color:#a5b4fc;letter-spacing:2px}
+.st{font-size:15px;font-weight:600;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #222}
+.bw{margin:4px 0;display:flex;align-items:center;gap:8px}
+.bl{width:100px;font-size:12px;color:#999;flex-shrink:0}
+.bt2{flex:1;height:8px;background:#222;border-radius:4px;position:relative}
+.bf{height:100%;border-radius:4px;transition:width .5s}
+.bv{width:36px;text-align:right;font-size:12px;color:#888}
+.ax-row{margin:10px 0}
+.ax-bar{position:relative;height:8px;background:#222;border-radius:4px}
+.ax-dot{position:absolute;top:-4px;width:16px;height:16px;background:#6366f1;border-radius:50%;transform:translateX(-50%)}
+.ax-mid{position:absolute;left:50%;top:0;width:1px;height:8px;background:#444}
+.ax-labels{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px}
+/* Team */
+.tm-card{background:#1a1a1a;padding:12px;border-radius:8px;text-align:center}
+.tm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.cf-box{background:#1a1111;border:1px solid #3b1111;border-radius:8px;padding:12px;margin:8px 0;font-size:13px;line-height:1.6}
+.pl-step{display:flex;align-items:center;gap:8px;padding:8px;background:#1a1a1a;border-radius:6px;margin-bottom:4px;font-size:13px}
+.pl-arrow{text-align:center;color:#444;font-size:12px;margin:2px 0}
+.em-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.em-row input{flex:1}
+.em-status{font-size:12px;margin-left:8px}
+.prog-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+.prog-bar{flex:1;height:6px;background:#222;border-radius:3px}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="logo">🧠 TeamBrain</div>
+  <div class="pr" id="prBar"></div>
+  <div class="pr-l" id="prLbl"></div>
+</div>
+
+<div id="pages"></div>
+
+<script>
+// ===== DATA =====
+const PHASES=[
+  {id:'intro',t:'시작'},
+  {id:'profile',t:'프로파일'},
+  {id:'lit',t:'AI 리터러시'},
+  {id:'fc',t:'강제 선택'},
+  {id:'report',t:'개인 리포트'},
+  {id:'team',t:'팀 만들기'},
+  {id:'teamReport',t:'팀 리포트'},
+];
+
+const PM_LIT = {
+  basic:["AI에게 미팅 녹음/노트를 주고 요약을 시켜본 적이 있다","AI에게 이메일/슬랙 메시지 초안을 작성시켜본 적이 있다","AI에게 자료를 주고 핵심 요약을 뽑아본 적이 있다","AI에게 브레인스토밍 아이디어를 뽑아달라고 해본 적이 있다"],
+  work:["AI에게 유저 문제를 설명하고 PRD 구조를 잡아본 적이 있다","AI가 작성한 문서에서 빠진 엣지케이스를 발견하고 추가해본 적이 있다","AI에게 경쟁사 자료를 분석시켜 포지셔닝 맵을 만들어본 적이 있다","AI에게 유저 인터뷰 트랜스크립트를 주고 패턴을 추출시켜본 적이 있다","AI에게 같은 기능의 유저 스토리를 여러 관점으로 작성시켜 비교해본 적이 있다","AI에게 내 PRD의 논리적 허점을 지적해달라고 해본 적이 있다"],
+  adv:["AI에게 역할(페르소나)을 부여하고 특정 관점에서 피드백을 받아본 적이 있다","AI에게 few-shot 예시를 주어 원하는 형식/톤의 결과를 얻어본 적이 있다","하나의 작업을 여러 프롬프트 전략으로 시도해서 결과를 비교해본 적이 있다","AI의 결과가 틀렸을 때 왜 틀렸는지 분석하고 프롬프트를 개선해본 적이 있다","AI에게 가상 유저 페르소나를 만들어서 제품/기능을 테스트해본 적이 있다"],
+  eval:["AI 모델 여러 개의 결과물을 같은 업무로 비교 평가해본 적이 있다","AI 결과물의 품질을 체계적으로 측정하는 기준을 정의해본 적이 있다","AI 도구의 ROI(시간 절약, 품질 변화)를 측정해본 적이 있다"],
+  proto:["Claude Code/Cursor 등으로 동작하는 프로토타입을 직접 만들어본 적이 있다","AI를 이용해 데이터 분석 스크립트를 작성하고 실행해본 적이 있다","AI로 웹페이지/랜딩페이지를 직접 만들어본 적이 있다"],
+  deploy:["AI를 이용해 만든 도구/서비스를 실제로 배포한 적이 있다","AI로 만든 자동화를 팀이 실제로 사용하고 있다"],
+  sys:["CLAUDE.md나 시스템 프롬프트를 직접 작성하여 AI 행동을 커스터마이즈해본 적이 있다","AI를 활용한 반복 업무 워크플로우를 설계하고 팀에 공유해본 적이 있다"],
+  boss:["AI agent가 자동으로 데이터 수집 → 분석 → 리포트 생성하는 파이프라인을 구축해본 적이 있다","여러 AI agent를 연결해서 end-to-end 업무 자동화를 만든 적이 있다","MCP 서버나 커스텀 AI 도구를 직접 개발해서 팀에 배포한 적이 있다","슬래시 커맨드, hooks 등을 직접 설계하여 팀의 AI 개발 환경을 세팅한 적이 있다"]
+};
+
+const FC = [
+  // Axis 1: S vs A (10)
+  {ax:1,l:"AI에게 물어보기 전에 내 생각을 정리하는 편이다",r:"AI에게 먼저 물어보고 거기서 실마리를 잡는 편이다"},
+  {ax:1,l:"초안은 내가 쓰고, AI에게 보완점을 묻는다",r:"AI가 초안을 만들면, 내가 방향을 잡아준다"},
+  {ax:1,l:"내 가설이 있어야 AI에게 질문할 수 있다",r:"AI의 답변을 보면서 내 가설이 만들어진다"},
+  {ax:1,l:"방향이 정해진 다음에 AI를 쓰는 게 효율적이다",r:"방향을 정하는 과정에서 AI를 쓰는 게 효율적이다"},
+  {ax:1,l:"AI가 예상 밖의 답을 주면 내 기준으로 다시 판단한다",r:"AI가 예상 밖의 답을 주면 그 관점을 탐색해본다"},
+  {ax:1,l:"프로젝트 시작 시 나만의 계획을 먼저 세운다",r:"프로젝트 시작 시 AI에게 여러 접근법을 뽑아달라고 한다"},
+  {ax:1,l:"AI에게 맡기더라도 판단 기준은 내가 미리 정한다",r:"AI에게 맡기면서 판단 기준도 함께 만들어간다"},
+  {ax:1,l:"내 전문 분야에서는 AI 없이도 첫 방향을 잡을 수 있다",r:"내 전문 분야에서도 AI의 시각이 출발점을 넓혀준다"},
+  {ax:1,l:"AI를 쓸 때 '내가 원하는 것'이 명확한 상태에서 시작한다",r:"AI를 쓸 때 '뭐가 가능한지'를 먼저 파악하면서 시작한다"},
+  {ax:1,l:"결론이 AI 제안과 다르더라도 내 판단을 신뢰한다",r:"내 판단과 다르더라도 AI 제안의 근거를 먼저 살핀다"},
+  // Axis 2: D vs G (10)
+  {ax:2,l:"AI에게 한 번에 명확한 지시를 주는 게 낫다",r:"AI와 여러 번 주고받으며 결과를 발전시키는 게 낫다"},
+  {ax:2,l:"AI에게 맡길 때 입력과 출력 형식을 정해서 준다",r:"AI에게 맡길 때 맥락을 공유하고 같이 형식을 잡아간다"},
+  {ax:2,l:"좋은 프롬프트 하나면 원하는 결과를 얻을 수 있다",r:"좋은 결과는 여러 턴의 대화에서 나온다"},
+  {ax:2,l:"AI 작업을 요청할 때 기대 결과물을 구체적으로 적는다",r:"AI 작업을 요청할 때 문제 상황과 고민을 함께 나눈다"},
+  {ax:2,l:"AI가 한 번에 좋은 결과를 주면 가장 만족스럽다",r:"AI와 대화하면서 처음 생각 못한 결과가 나오면 가장 만족스럽다"},
+  {ax:2,l:"AI에게 일을 시킬 때 체크리스트처럼 나눠서 준다",r:"AI에게 일을 시킬 때 전체 그림을 공유하고 같이 쪼갠다"},
+  {ax:2,l:"AI와의 작업 시간을 줄이는 것이 생산성이다",r:"AI와의 작업 깊이를 높이는 것이 생산성이다"},
+  {ax:2,l:"AI 결과가 기대와 다르면 프롬프트를 수정해서 다시 보낸다",r:"AI 결과가 기대와 다르면 왜 그렇게 나왔는지 대화를 이어간다"},
+  {ax:2,l:"AI에게 역할을 정해주고 그 안에서 일하게 한다",r:"AI에게 나의 사고 파트너 역할을 기대한다"},
+  {ax:2,l:"같은 작업이면 AI와의 대화 턴 수가 적을수록 좋다",r:"대화 턴이 늘더라도 더 나은 결과가 나오면 괜찮다"},
+  // Axis 3: T vs E (10)
+  {ax:3,l:"AI가 잘하는 일과 못하는 일을 구분해서 맡긴다",r:"AI가 할 수 있을지 모르는 일도 일단 시켜본다"},
+  {ax:3,l:"검증된 프롬프트 패턴을 반복해서 쓴다",r:"새로운 프롬프트 방식을 자주 실험한다"},
+  {ax:3,l:"AI를 쓸 때 예측 가능한 결과가 나오는 게 중요하다",r:"AI를 쓸 때 예상 못한 결과가 나오는 것도 가치 있다"},
+  {ax:3,l:"이 상황에 어떤 AI 기능이 맞는지 아는 편이다",r:"이 상황에 AI를 어떻게 쓸지 여러 가지 시도해보는 편이다"},
+  {ax:3,l:"AI로 실패하면 그 방법은 피하게 된다",r:"AI로 실패하면 조건을 바꿔서 다시 시도한다"},
+  {ax:3,l:"AI 활용법을 팀에 공유할 때 '이렇게 하면 확실하다'고 말한다",r:"AI 활용법을 팀에 공유할 때 '이렇게 해봤는데 재밌다'고 말한다"},
+  {ax:3,l:"AI를 도입할 때 성공 확률이 높은 업무부터 적용한다",r:"AI를 도입할 때 가장 궁금한 업무에 먼저 적용해본다"},
+  {ax:3,l:"내 AI 활용 방식은 꽤 안정적인 패턴이 있다",r:"내 AI 활용 방식은 계속 바뀌고 있다"},
+  {ax:3,l:"AI의 한계를 알면 그 안에서 최대한 활용한다",r:"AI의 한계를 만나면 우회 방법을 찾아본다"},
+  {ax:3,l:"AI 도구가 업데이트되면 기존 작업에 영향이 없는지 확인한다",r:"AI 도구가 업데이트되면 새 기능부터 써본다"},
+  // Axis 4: C vs L (10)
+  {ax:4,l:"AI가 만든 결과물을 내 스타일로 다시 다듬는다",r:"AI가 만든 결과물이 괜찮으면 바로 쓴다"},
+  {ax:4,l:"AI 결과물에 내 이름을 걸려면 직접 검토해야 한다",r:"AI 결과물의 핵심만 맞으면 빠르게 전달하는 게 낫다"},
+  {ax:4,l:"90점짜리를 95점으로 올리는 데 시간을 쓸 수 있다",r:"90점이면 충분하고, 남은 시간에 다른 일을 한다"},
+  {ax:4,l:"AI 결과물을 읽으면서 '여기는 고치면 더 낫겠다'가 바로 보인다",r:"AI 결과물을 읽으면서 '이 정도면 목적에 맞겠다'를 먼저 판단한다"},
+  {ax:4,l:"AI가 만든 코드나 문서에 내 기준이 반영되어야 한다",r:"AI가 만든 코드나 문서가 동작하면 스타일은 크게 신경 안 쓴다"},
+  {ax:4,l:"결과물의 완성도가 내 전문성을 보여준다고 생각한다",r:"결과물의 속도와 양이 내 전문성을 보여준다고 생각한다"},
+  {ax:4,l:"AI 결과물을 그대로 보내는 건 불편하다",r:"AI 결과물에 손을 대다 보면 시간이 아깝다는 생각이 든다"},
+  {ax:4,l:"동료가 내 결과물의 세부 표현까지 좋다고 하면 뿌듯하다",r:"동료가 내 결과물이 빠르게 나와서 좋다고 하면 뿌듯하다"},
+  {ax:4,l:"AI 결과를 받은 뒤 내가 다듬는 시간이 전체 작업의 핵심이다",r:"AI 결과를 받은 뒤 바로 다음 작업으로 넘어가는 게 핵심이다"},
+  {ax:4,l:"품질 기준에 못 미치면 AI에게 다시 시킨다",r:"일정 기준만 넘으면 다음 단계로 넘어간다"},
+  // Axis 5: E vs I (10)
+  {ax:5,l:"팀원에게 작업을 넘길 때 판단 근거와 기각한 대안까지 적는 편이다",r:"팀원에게 작업을 넘길 때 결론과 다음 할 일 위주로 간결하게 보내는 편이다"},
+  {ax:5,l:"동료가 AI로 만든 결과물을 보내올 때, 어떤 과정을 거쳤는지 같이 보고 싶다",r:"동료가 AI로 만든 결과물을 보내올 때, 결과물이 좋으면 과정은 안 봐도 된다"},
+  {ax:5,l:"핸드오프 문서에 '확실하지 않은 부분'과 '고민한 흔적'을 남기는 편이다",r:"핸드오프 문서에 '확정된 방향'과 '다음 사람이 할 일'을 남기는 편이다"},
+  {ax:5,l:"팀원이 맥락 없이 결론만 보내면 '왜 이렇게 결정했어?'라고 물어보게 된다",r:"팀원이 결론만 보내도 일단 진행하고, 궁금하면 나중에 물어보는 편이다"},
+  {ax:5,l:"AI가 만든 결과물을 팀에 공유할 때, AI를 어떻게 활용했는지도 설명하는 편이다",r:"AI가 만든 결과물을 팀에 공유할 때, 결과물만 공유하고 방법은 물어보면 알려주는 편이다"},
+  {ax:5,l:"팀 슬랙에 올리는 업데이트가 길어지더라도 배경 설명을 넣는 게 낫다",r:"팀 슬랙 업데이트는 짧을수록 좋고, 깊은 얘기는 미팅에서 하면 된다"},
+  {ax:5,l:"내가 넘긴 작업에 대해 팀원이 질문할 일이 적도록 문서를 꼼꼼히 쓰는 편이다",r:"문서는 빠르게 쓰고, 질문이 오면 그때 구두로 보충하는 게 더 효율적이다"},
+  {ax:5,l:"AI 결과물에 대한 내 판단이 바뀌었을 때, 바뀐 이유를 팀에 공유하는 편이다",r:"AI 결과물에 대한 내 판단이 바뀌었을 때, 바뀐 결론만 공유하고 넘어가는 편이다"},
+  {ax:5,l:"동료의 AI 활용 방식이 나와 다르면, 서로의 접근법을 정리해보고 싶다",r:"동료의 AI 활용 방식이 나와 다르면, 결과만 좋으면 각자 방식대로 하면 된다"},
+  {ax:5,l:"작업 중 불확실한 부분이 있으면 그 불확실성 자체를 팀에 미리 공유하는 편이다",r:"작업 중 불확실한 부분이 있으면 내가 해결한 뒤에 결과를 공유하는 편이다"},
+  // Axis 6: F vs B (10)
+  {ax:6,l:"팀원의 AI 결과물에 문제가 보이면 구체적으로 지적하고 대안을 제시하는 편이다",r:"팀원의 AI 결과물에 문제가 보이면 상대 의도를 먼저 듣고 같이 조정해가는 편이다"},
+  {ax:6,l:"AI 활용 방식에 대해 팀원과 의견이 다르면, 내 근거를 밝히고 설득하는 편이다",r:"AI 활용 방식에 대해 팀원과 의견이 다르면, 양쪽 장점을 섞어 절충안을 찾는 편이다"},
+  {ax:6,l:"팀 회의에서 AI 결과물 품질이 부족하다고 느끼면 바로 말하는 편이다",r:"팀 회의에서 AI 결과물 품질이 부족하다고 느끼면 상대 기준을 먼저 물어보는 편이다"},
+  {ax:6,l:"내가 검토한 방향이 맞다고 확신하면, 반대 의견이 있어도 입장을 유지하는 편이다",r:"내가 확신하더라도 반대 의견이 있으면 합의점을 찾으려고 조정하는 편이다"},
+  {ax:6,l:"동료가 AI 산출물을 그대로 쓰자고 할 때, 부족하면 '고쳐야 한다'고 말한다",r:"동료가 AI 산출물을 그대로 쓰자고 할 때, 부족해도 '어떻게 생각해?'로 풀어간다"},
+  {ax:6,l:"AI를 어떤 단계에서 쓸지 팀 기준을 정할 때, 내 경험에 근거한 의견을 강하게 낸다",r:"AI를 어떤 단계에서 쓸지 팀 기준을 정할 때, 각자 경험을 들으며 공통 기준을 만들어간다"},
+  {ax:6,l:"팀원이 AI 결과를 과신한다고 느끼면, 구체적 위험을 짚어 경고하는 편이다",r:"팀원이 AI 결과를 과신한다고 느끼면, 같이 검증해보자고 제안하는 편이다"},
+  {ax:6,l:"핸드오프 받은 작업의 방향이 잘못됐다고 판단하면, 근거와 함께 내 판단을 전달한다",r:"핸드오프 받은 작업의 방향이 잘못됐다고 판단하면, 넘겨준 사람과 대화하며 재조정한다"},
+  {ax:6,l:"팀의 AI 활용 룰에 동의하지 않으면, 대안을 제시하며 변경을 주장하는 편이다",r:"팀의 AI 활용 룰에 동의하지 않으면, 일단 따르면서 실제 사례로 개선을 제안하는 편이다"},
+  {ax:6,l:"AI 결과물에 대해 팀원과 기준이 다르면, 내 기준이 왜 맞는지 설명하는 편이다",r:"AI 결과물에 대해 팀원과 기준이 다르면, 서로의 기준을 이해하고 팀 기준을 새로 합의한다"},
+];
+
+const AX_NAMES = {1:{l:'Self-Directed',r:'AI-Directed',lk:'내가 먼저 판단',rk:'AI에서 출발',ll:'S',rl:'A'},
+  2:{l:'Directive',r:'Dialogic',lk:'명확히 시키기',rk:'대화하며 발전',ll:'D',rl:'G'},
+  3:{l:'Strategic',r:'Experimental',lk:'전략적 활용',rk:'실험적 탐험',ll:'T',rl:'E'},
+  4:{l:'Craftsperson',r:'Leverager',lk:'꼼꼼히 다듬기',rk:'빠르게 활용',ll:'C',rl:'L'},
+  5:{l:'Explicit',r:'Implicit',lk:'맥락을 문서로',rk:'핵심만 전달',ll:'E',rl:'I'},
+  6:{l:'Firm',r:'Bridging',lk:'근거로 옹호',rk:'합의를 찾음',ll:'F',rl:'B'}};
+
+const TYPE_NAMES={SDTCEF:"Strategic Commander",SGTCEF:"Collaborative Architect",AGELIB:"Creative Explorer",ADTCEF:"Analytical Guardian",SGTCEB:"Diplomatic Architect",ADECIB:"Rapid Experimenter",SDTCIB:"Quiet Commander",AGTLEF:"Flow Collaborator"};
+
+// ===== STATE =====
+let S={name:'',role:'PM',senior:'',litChecks:{},fcAnswers:new Array(60).fill(0),fcIdx:0,shuffledFC:[],teamEmails:[]};
+
+// ===== INIT =====
+function init(){
+  S.shuffledFC=[...FC].map((p,i)=>({...p,origIdx:i})).sort(()=>Math.random()-.5);
+  buildPages();
+  showPhase(0);
+}
+
+function showPhase(n){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('ph_'+n)?.classList.add('on');
+  const bar=document.getElementById('prBar');
+  bar.innerHTML=PHASES.map((_,i)=>`<div class="pr-d ${i<n?'dn':''} ${i===n?'cu':''}"></div>`).join('');
+  document.getElementById('prLbl').textContent=PHASES[n]?.t||'';
+  window.scrollTo(0,0);
+  if(n===3) startFC();
+}
+
+function buildPages(){
+  const c=document.getElementById('pages');
+  c.innerHTML=`
+  ${buildIntro()}
+  ${buildProfile()}
+  ${buildLit()}
+  ${buildFC()}
+  ${buildReport()}
+  ${buildTeam()}
+  ${buildTeamReport()}
+  `;
+}
+
+// ===== PAGE BUILDERS =====
+function buildIntro(){
+  return `<div class="pg on" id="ph_0">
+    <div style="text-align:center;padding:40px 0">
+      <div style="font-size:48px;margin-bottom:12px">🧠</div>
+      <h2 style="font-size:24px;margin-bottom:8px">TeamBrain AI 협업 인적성 검사</h2>
+      <p style="color:#888;margin-bottom:24px">~20분 · 88문항 · 당신의 AI 협업 스타일을 진단합니다</p>
+      <div class="cd" style="text-align:left;max-width:480px;margin:0 auto">
+        <p style="font-size:14px;line-height:1.8;color:#ccc">
+          이 검사는 6개의 축으로 당신의 AI 협업 유형을 진단합니다.<br><br>
+          ✅ 정답이 없습니다 — 모든 답변이 유효합니다<br>
+          ✅ 직감대로 답해주세요<br>
+          ✅ 상세한 개인 리포트 + {이름}.md가 생성됩니다<br>
+          ✅ 팀 전원 완료 시 팀 리포트도 생성됩니다
+        </p>
+      </div>
+      <div style="margin-top:24px">
+        <button class="bt bp" onclick="showPhase(1)" style="font-size:16px;padding:14px 32px">시작하기 →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildProfile(){
+  return `<div class="pg" id="ph_1">
+    <h2>Phase 1: 프로파일</h2>
+    <div class="cd">
+      <h3>이름</h3>
+      <input type="text" id="inName" placeholder="이름을 입력하세요" style="margin-bottom:12px">
+      <h3>역할</h3>
+      <div class="rr" id="roleSelect">
+        ${['PM','Engineering','Design','UX Research','Growth'].map(r=>
+          `<div class="ri" onclick="selR(this,'role','${r}')">${r}</div>`
+        ).join('')}
+      </div>
+      <h3>Seniority</h3>
+      <div class="rr">
+        ${['Junior','Mid','Senior','Lead'].map(s=>
+          `<div class="ri" onclick="selR(this,'senior','${s}')">${s}</div>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="nv"><div></div><button class="bt bp" onclick="S.name=document.getElementById('inName').value||'User';showPhase(2)">다음 →</button></div>
+  </div>`;
+}
+
+function buildLit(){
+  const sections=[
+    {t:'기초 활용',items:PM_LIT.basic},
+    {t:'업무 적용',items:PM_LIT.work},
+    {t:'고급 활용',items:PM_LIT.adv},
+    {t:'Eval (AI 평가)',items:PM_LIT.eval},
+    {t:'프로토타입 개발',items:PM_LIT.proto},
+    {t:'워킹 프로덕트 배포',items:PM_LIT.deploy},
+    {t:'시스템 설계',items:PM_LIT.sys},
+    {t:'끝판왕',items:PM_LIT.boss},
+  ];
+  return `<div class="pg" id="ph_2">
+    <h2>Phase 2: AI 리터러시</h2>
+    <div class="nr">해본 적이 있는 항목에 체크하세요. (PM 기준)</div>
+    <div class="cd">
+      ${sections.map(sec=>`
+        <h3>${sec.t}</h3>
+        ${sec.items.map((it,i)=>`
+          <div class="ck" onclick="togLit(this,'${sec.t}_${i}')">
+            <div class="cb"></div>${it}
+          </div>
+        `).join('')}
+      `).join('')}
+    </div>
+    <div class="nv"><button class="bt bg" onclick="showPhase(1)">← 이전</button><button class="bt bp" onclick="showPhase(3)">다음: 강제 선택 →</button></div>
+  </div>`;
+}
+
+function buildFC(){
+  return `<div class="pg" id="ph_3">
+    <h2>Phase 3: 강제 선택</h2>
+    <div class="nr">둘 다 매력적인 문장입니다. 더 나에게 가까운 쪽을 선택하세요.</div>
+    <div class="cd">
+      <div class="fc-n" id="fcN">1 / 60</div>
+      <div class="fc-p">
+        <div class="fc-s" id="fcL"></div>
+        <div class="fc-s" id="fcR"></div>
+      </div>
+      <div class="fc-sc" id="fcSc">
+        ${[-2,-1,0,1,2].map(v=>`
+          <label><input type="radio" name="fc" value="${v}" onchange="ansFC(${v})">
+          <div class="dt"></div>
+          <div class="dl">${['강하게\n왼쪽','왼쪽','중립','오른쪽','강하게\n오른쪽'][v+2]}</div></label>
+        `).join('')}
+      </div>
+      <div style="margin-top:8px">
+        <div class="prog-row"><div class="prog-bar"><div class="prog-fill" id="fcProg" style="width:0%;background:#6366f1"></div></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildReport(){ return `<div class="pg" id="ph_4"><div id="rptContent"></div></div>`; }
+function buildTeam(){ return `<div class="pg" id="ph_5"><div id="teamContent"></div></div>`; }
+function buildTeamReport(){ return `<div class="pg" id="ph_6"><div id="teamRptContent"></div></div>`; }
+
+// ===== INTERACTIONS =====
+function selR(el,key,val){
+  el.parentElement.querySelectorAll('.ri').forEach(o=>o.classList.remove('sl'));
+  el.classList.add('sl');
+  S[key]=val;
+}
+function togLit(el,key){
+  const cb=el.querySelector('.cb');
+  cb.classList.toggle('on');
+  S.litChecks[key]=cb.classList.contains('on');
+}
+
+// ===== FORCED CHOICE =====
+function startFC(){
+  S.fcIdx=0;
+  showFCItem(0);
+}
+function showFCItem(idx){
+  if(idx>=60){generateReport();return;}
+  S.fcIdx=idx;
+  const p=S.shuffledFC[idx];
+  document.getElementById('fcN').textContent=`${idx+1} / 60`;
+  document.getElementById('fcL').textContent=p.l;
+  document.getElementById('fcR').textContent=p.r;
+  document.querySelectorAll('#fcSc input').forEach(i=>i.checked=false);
+  document.getElementById('fcProg').style.width=Math.round(idx/60*100)+'%';
+}
+function ansFC(v){
+  S.fcAnswers[S.fcIdx]=v;
+  setTimeout(()=>showFCItem(S.fcIdx+1),200);
+}
+
+// ===== SCORING =====
+function calcScores(){
+  let sums={1:0,2:0,3:0,4:0,5:0,6:0};
+  let counts={1:0,2:0,3:0,4:0,5:0,6:0};
+  S.shuffledFC.forEach((p,i)=>{
+    sums[p.ax]+=S.fcAnswers[i];
+    counts[p.ax]++;
+  });
+  let scores={};
+  for(let ax=1;ax<=6;ax++){
+    scores[ax]=Math.round(50+(sums[ax]/Math.max(counts[ax],1))*25);
+  }
+  return scores;
+}
+
+function getType(sc){
+  return (sc[1]<50?'S':'A')+(sc[2]<50?'D':'G')+(sc[3]<50?'T':'E')+(sc[4]<50?'C':'L')+(sc[5]<50?'E':'I')+(sc[6]<50?'F':'B');
+}
+
+function getLitLevel(){
+  const checks=Object.values(S.litChecks).filter(v=>v).length;
+  const bossChecks=Object.entries(S.litChecks).filter(([k,v])=>v&&k.startsWith('끝판왕')).length;
+  const sysChecks=Object.entries(S.litChecks).filter(([k,v])=>v&&(k.startsWith('시스템')||k.startsWith('워킹'))).length;
+  if(bossChecks>0) return {lv:5,name:'아키텍트'};
+  if(sysChecks>0) return {lv:4,name:'시스템 설계'};
+  if(checks>15) return {lv:3,name:'숙련'};
+  if(checks>8) return {lv:2,name:'활용'};
+  return {lv:1,name:'입문'};
+}
+
+// ===== REPORT GENERATION =====
+async function callClaude(system, userMsg){
+  try{
+    const r=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system,messages:[{role:'user',content:userMsg}],max_tokens:8000})
+    });
+    const d=await r.json();
+    if(d.content&&d.content[0]) return d.content[0].text;
+    return null;
+  }catch(e){console.error(e);return null;}
+}
+
+function mdToHtml(md){
+  return md
+    .replace(/^### (.*$)/gm,'<h3 style="color:#a5b4fc;margin:16px 0 8px">$1</h3>')
+    .replace(/^## (.*$)/gm,'<div class="st">$1</div>')
+    .replace(/^# (.*$)/gm,'<h2>$1</h2>')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^- (.*$)/gm,'<div style="padding-left:12px">• $1</div>')
+    .replace(/^→ (.*$)/gm,'<div style="padding-left:16px;color:#6366f1">→ $1</div>')
+    .replace(/^Step (\d)/gm,'<div style="padding-left:16px;color:#fbbf24">Step $1</div>')
+    .replace(/^> (.*$)/gm,'<div style="padding-left:12px;border-left:3px solid #333;color:#999;margin:4px 0">$1</div>')
+    .replace(/```([\s\S]*?)```/g,'<pre style="background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:12px;font-size:12px;overflow-x:auto;white-space:pre-wrap">$1</pre>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+}
+
+async function generateReport(){
+  const sc=calcScores();
+  const type=getType(sc);
+  const lit=getLitLevel();
+  const typeName=TYPE_NAMES[type]||'Unique Blend';
+
+  const axData=[1,2,3,4,5,6].map(ax=>({
+    ...AX_NAMES[ax],score:sc[ax],letter:sc[ax]<50?AX_NAMES[ax].ll:AX_NAMES[ax].rl
+  }));
+
+  const typeStr=axData.map(a=>a.letter).join('');
+
+  // Show loading
+  showPhase(4);
+  document.getElementById('rptContent').innerHTML=`
+    <div style="text-align:center;padding:60px 0">
+      <div style="font-size:36px;margin-bottom:16px" class="pulse">🧠</div>
+      <h2>리포트 생성 중...</h2>
+      <p style="color:#888;margin-top:8px">Claude가 ${S.name}의 AI 협업 유형을 분석하고 있습니다</p>
+      <div class="prog-row" style="max-width:300px;margin:20px auto"><div class="prog-bar"><div class="prog-fill" style="width:60%;background:#6366f1"></div></div></div>
+    </div>`;
+
+  // Build data for Claude
+  const litCount=Object.values(S.litChecks).filter(v=>v).length;
+  const litDetails=Object.entries(S.litChecks).filter(([k,v])=>v).map(([k])=>k.split('_')[0]).join(', ');
+  const axDesc=axData.map(a=>`축${a===axData[0]?'1':a===axData[1]?'2':a===axData[2]?'3':a===axData[3]?'4':a===axData[4]?'5':'6'} ${a.l}/${a.r}: ${a.score}% → ${a.letter}(${a.score<50?a.lk:a.rk})`).join('\n');
+
+  const dataJson=JSON.stringify({
+    name:S.name, role:S.role, seniority:S.senior,
+    type:typeStr, typeName,
+    scores:{ax1:sc[1],ax2:sc[2],ax3:sc[3],ax4:sc[4],ax5:sc[5],ax6:sc[6]},
+    literacy:{level:lit.lv,name:lit.name,count:litCount},
+    axes:axData.map(a=>({left:a.l,right:a.r,leftK:a.lk,rightK:a.rk,score:a.score,letter:a.letter}))
+  },null,2);
+
+  const systemPrompt=`당신은 TeamBrain, AI 협업 인적성 분석가입니다.
+테스트 데이터를 분석하여 MBTI급 초상세 개인 리포트를 생성합니다.
+
+규칙:
+- 한국어로 작성
+- 마크다운 형식
+- 구체적이고 행동 가능한 추천 (제네릭 금지)
+- 역할(PM/Eng/Design/UXR/Growth)의 핵심 업무 맥락에서 분석
+- 각 축의 점수가 50% 미만이면 왼쪽 극, 50% 이상이면 오른쪽 극
+- {이름}.md는 Claude Code가 실제로 읽고 따를 수 있는 구체적 룰로 작성
+
+6축:
+- 축1 판단기점: Self-Directed(S) vs AI-Directed(A)
+- 축2 협업깊이: Directive(D) vs Dialogic(G)
+- 축3 AI이해도: Strategic(T) vs Experimental(E)
+- 축4 품질관여: Craftsperson(C) vs Leverager(L)
+- 축5 소통스타일: Explicit(E) vs Implicit(I)
+- 축6 갈등대처: Firm(F) vs Bridging(B)`;
+
+  const userPrompt=`아래 테스트 결과를 분석하여 두 개의 마크다운 문서를 생성해주세요.
+
+## 테스트 데이터
+${dataJson}
+
+## 문서 1: 개인 리포트 ({이름}-report.md)
+
+아래 구조로 작성. 각 섹션이 풍부하고 구체적이어야 합니다:
+
+### 1. 유형 개요
+- 유형 코드와 의미 설명 (2-3 단락)
+- 이 유형의 ${S.role}이 가장 빛나는 순간
+- 이 유형의 ${S.role}이 가장 위험한 순간
+- 강점 3가지 (구체적 업무 맥락)
+- 약점 3가지 (구체적 업무 맥락)
+
+### 2. 축별 심층 분석 (6축 각각)
+각 축에 대해:
+- 점수가 의미하는 것 (추상적이 아닌 구체적 행동 예시)
+- ${S.role} 업무에 미치는 영향
+- 주의할 점
+- 같은 역할에서 반대 극의 사람과의 차이
+
+### 3. AI 리터러시 분석
+- Lv${lit.lv}의 의미 + 유형과 결합 해석
+- 다음 레벨로 가기 위한 구체적 행동 3가지
+
+### 4. ${S.role} 핵심 업무별 AI 활용 가이드
+${S.role}의 핵심 업무 8-10개 각각에 대해:
+- 이 유형이면 이 업무를 이렇게 하세요 (구체적)
+- STOP/THINK 여부와 이유
+
+### 5. 위험 패턴 & 방지법
+유형에서 도출된 함정 3-4가지. 각각:
+- 패턴 설명
+- 감지 조건 (Claude가 감지할 수 있는 구체적 신호)
+- Claude가 할 경고 메시지
+
+### 6. 성장 추천
+약한 축을 키우는 구체적 행동 3가지
+
+---
+
+## 문서 2: {이름}.md (Claude Code 사고 강제 룰)
+
+이 파일은 Claude Code가 세션 시작 시 읽고 그대로 따르는 룰입니다.
+반드시 아래 구조로, Claude Code가 실행할 수 있는 구체적 지시문으로 작성하세요:
+
+\`\`\`
+# ${S.name} — ${S.role} · ${typeStr} · AI 리터러시 Lv${lit.lv}
+
+## 이 파일의 목적
+[이 사람의 핵심 특성 + 강점이 곧 함정이 되는 패턴]
+
+## 🔴 STOP — 반드시 ${S.name}이 먼저 판단해야 하는 순간
+[각 STOP마다: 트리거 키워드 + "멈추고 물어보세요:" + 구체적 질문 3-4개 + "답한 후에만 진행"]
+최소 3개의 STOP 상황.
+
+## 🟡 THINK — 단계별 사고가 필요한 업무
+[각 업무마다: Step 1~4 구체적 질문 + 건너뛰려 하면 경고 메시지]
+최소 4개의 업무.
+
+## 결과물 작성 시 — 받는 사람 고려
+[가상 팀원 3명에 대해 유형 기반 맞춤 가이드]
+
+## traces 저장 룰
+/save 실행 시 포함할 것: 결정사항+이유, 기각한 대안, 다음에 알아야 할 것
+
+## ⚠️ 함정 패턴
+[각 패턴: 설명 + 감지 조건 + Claude가 할 말]
+\`\`\`
+
+---
+
+두 문서를 ===REPORT_START===와 ===REPORT_END===, ===MD_START===와 ===MD_END===로 구분해주세요.`;
+
+  // Call Claude API
+  const result = await callClaude(systemPrompt, userPrompt);
+
+  if(!result){
+    document.getElementById('rptContent').innerHTML=`
+      <div class="rpt" style="text-align:center;padding:40px">
+        <div style="font-size:24px;margin-bottom:12px">❌</div>
+        <p>API 호출에 실패했습니다. Vercel 환경변수(ANTHROPIC_API_KEY)를 확인하세요.</p>
+        <button class="bt bp" style="margin-top:16px" onclick="generateReport()">다시 시도</button>
+      </div>`;
+    return;
+  }
+
+  // Parse response
+  let reportMd='', nameMd='';
+  const reportMatch=result.match(/===REPORT_START===([\s\S]*?)===REPORT_END===/);
+  const mdMatch=result.match(/===MD_START===([\s\S]*?)===MD_END===/);
+  reportMd=reportMatch?reportMatch[1].trim():result;
+  nameMd=mdMatch?mdMatch[1].trim():'# '+S.name+' — '+S.role+'\n\n(생성 실패 — 다시 시도하세요)';
+
+  // Store for zip download
+  S.generatedReport=reportMd;
+  S.generatedMd=nameMd;
+
+  // Render
+  document.getElementById('rptContent').innerHTML=`
+    <div class="rpt">
+      <div class="rpt-h">
+        <div class="av" style="background:#6366f1">${S.name[0]||'?'}</div>
+        <div>
+          <div style="font-size:20px;font-weight:700">${S.name} — ${S.role} · ${S.senior}</div>
+          <div style="color:#888;font-size:13px">AI 리터러시: Lv${lit.lv} (${lit.name})</div>
+        </div>
+        <div style="margin-left:auto"><div class="tb">${typeStr}</div></div>
+      </div>
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:18px;font-weight:600;color:#a5b4fc">"${typeName}"</div>
+      </div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">🎯 6축 프로파일</div>
+      ${axData.map(a=>`
+        <div class="ax-row">
+          <div class="ax-labels"><span>${a.lk} (${a.l})</span><span style="font-weight:600;color:#a5b4fc">${a.letter}</span><span>${a.rk} (${a.r})</span></div>
+          <div class="ax-bar"><div class="ax-mid"></div><div class="ax-dot" style="left:${a.score}%"></div></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="rpt">
+      <div style="font-size:14px;color:#ccc;line-height:1.8">${mdToHtml(reportMd)}</div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">📥 ${S.name}.md (Claude Code 룰)</div>
+      <div style="background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.6;color:#a5b4fc;white-space:pre-wrap;max-height:500px;overflow-y:auto">${nameMd}</div>
+    </div>
+
+    <div class="nv">
+      <div></div>
+      <div style="display:flex;gap:8px">
+        <button class="bt bp" onclick="downloadPersonalZip()">📥 zip 다운로드</button>
+        <button class="bt bp" onclick="showPhase(5)">팀 만들기 →</button>
+      </div>
+    </div>
+  `;
+}
+
+// ===== TEAM PAGE =====
+function buildTeamPageContent(){
+  document.getElementById('teamContent').innerHTML=`
+    <h2>👥 팀 만들기</h2>
+    <div class="nr">팀원의 이메일을 입력하고 초대하세요. (프로토타입: 시뮬레이션)</div>
+    <div class="cd">
+      <h3>팀원 초대</h3>
+      <div id="emailList">
+        <div class="em-row"><input type="email" placeholder="팀원 1 이메일"><span class="em-status"></span></div>
+        <div class="em-row"><input type="email" placeholder="팀원 2 이메일"><span class="em-status"></span></div>
+        <div class="em-row"><input type="email" placeholder="팀원 3 이메일"><span class="em-status"></span></div>
+      </div>
+      <button class="bt bp" style="margin-top:12px;width:100%" onclick="sendInvites()">📧 초대 보내기</button>
+    </div>
+    <div class="cd" id="teamProgress" style="display:none">
+      <h3>테스트 진행 상황</h3>
+      <div id="teamStatusList"></div>
+      <div class="prog-row"><div class="prog-bar"><div class="prog-fill" id="teamProg" style="width:0%;background:#6366f1"></div></div></div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="bt bp" id="teamCompleteBtn" disabled onclick="simulateTeamComplete()">전원 완료 시뮬레이션</button>
+      </div>
+    </div>
+    <div class="nv"><button class="bt bg" onclick="showPhase(4)">← 개인 리포트</button><div></div></div>
+  `;
+}
+
+function sendInvites(){
+  const emails=document.querySelectorAll('#emailList input');
+  emails.forEach(el=>{
+    el.parentElement.querySelector('.em-status').innerHTML='<span style="color:#4ade80"> ✓ 초대 발송됨</span>';
+  });
+  document.getElementById('teamProgress').style.display='block';
+
+  const members=[
+    {name:'건희',role:'Engineering',type:'ADTC',done:false},
+    {name:'우석',role:'Design',type:'AGEL-IB',done:false},
+    {name:'아롬',role:'UX Research',type:'SGTC-EF',done:false},
+  ];
+
+  document.getElementById('teamStatusList').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1a1a1a">
+      <div class="av" style="background:#6366f1;width:32px;height:32px;font-size:14px">${S.name[0]}</div>
+      <span>${S.name} (${S.role})</span>
+      <span style="margin-left:auto;color:#4ade80">✅ 완료</span>
+    </div>
+    ${members.map(m=>`
+      <div class="em-row" style="padding:8px 0;border-bottom:1px solid #1a1a1a">
+        <div class="av" style="background:#333;width:32px;height:32px;font-size:14px">${m.name[0]}</div>
+        <span style="margin-left:8px">${m.name} (${m.role})</span>
+        <span class="team-st" style="margin-left:auto;color:#888">⏳ 대기</span>
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('teamProg').style.width='25%';
+
+  // Simulate progress
+  let done=1;
+  const sts=document.querySelectorAll('.team-st');
+  const interval=setInterval(()=>{
+    if(done<4){
+      sts[done-1].innerHTML='<span style="color:#4ade80">✅ 완료</span>';
+      done++;
+      document.getElementById('teamProg').style.width=(done/4*100)+'%';
+    }
+    if(done>=4){
+      clearInterval(interval);
+      document.getElementById('teamCompleteBtn').disabled=false;
+      document.getElementById('teamCompleteBtn').textContent='🎉 전원 완료! 팀 리포트 생성 →';
+    }
+  },1500);
+}
+
+function simulateTeamComplete(){
+  generateTeamReport();
+  showPhase(6);
+}
+
+// ===== TEAM REPORT =====
+function generateTeamReport(){
+  const sc=calcScores();
+  const type=getType(sc);
+  const lit=getLitLevel();
+
+  const team=[
+    {name:S.name,role:S.role,type:type,scores:sc,color:'#6366f1',lit:lit.lv},
+    {name:'건희',role:'Engineering',type:'ADTCEF',scores:{1:65,2:35,3:30,4:25,5:40,6:45},color:'#22c55e',lit:3},
+    {name:'우석',role:'Design',type:'AGELIB',scores:{1:70,2:60,3:75,4:70,5:65,6:60},color:'#f59e0b',lit:2},
+    {name:'아롬',role:'UX Research',type:'SGTCEF',scores:{1:35,2:65,3:40,4:30,5:35,6:45},color:'#ec4899',lit:3},
+  ];
+
+  document.getElementById('teamRptContent').innerHTML=`
+    <h2>👥 팀 AI 협업 리포트</h2>
+
+    <div class="rpt">
+      <div class="st">8.1 팀 유형 구성</div>
+      <div class="tm-grid">
+        ${team.map(m=>`
+          <div class="tm-card">
+            <div class="av" style="background:${m.color};margin:0 auto 8px;width:40px;height:40px;font-size:16px">${m.name[0]}</div>
+            <div style="font-weight:600;font-size:13px">${m.name}</div>
+            <div style="font-size:11px;color:#888">${m.role} · Lv${m.lit}</div>
+            <div class="tb" style="font-size:11px;padding:3px 6px;margin-top:6px">${m.type}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <h3>축별 팀 분포</h3>
+      ${[1,2,3,4,5,6].map(ax=>`
+        <div style="margin:8px 0">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#888">
+            <span>${AX_NAMES[ax].l}</span><span>${AX_NAMES[ax].r}</span>
+          </div>
+          <div style="position:relative;height:10px;background:#1a1a1a;border-radius:5px;margin-top:3px">
+            <div style="position:absolute;left:50%;width:1px;height:10px;background:#333"></div>
+            ${team.map(m=>`<div style="position:absolute;left:${m.scores[ax]}%;top:50%;width:10px;height:10px;background:${m.color};border-radius:50%;transform:translate(-50%,-50%)" title="${m.name}"></div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px">
+        ${team.map(m=>`<span><span style="color:${m.color}">●</span> ${m.name}</span>`).join('')}
+      </div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">8.3 팀 마찰 지점</div>
+      <div class="cf-box">
+        <strong>${S.name}(${type.substring(4,6)==='EF'?'Explicit+Firm':type.substring(4)}) ↔ 우석(AGEL-IB)</strong><br><br>
+        <strong>소통 갭:</strong> ${S.name}은 Explicit, 우석은 Implicit. ${S.name}이 상세 문서를 보내도 우석은 핵심만 읽음.<br>
+        → <strong>솔루션:</strong> ${S.name}은 상단 3줄 요약 필수. 우석은 "왜 이 방향?" 한 줄 피드백 필수.<br><br>
+        <strong>품질 갭:</strong> ${S.name}은 Craftsperson, 우석은 Leverager. 품질 기대치가 다름.<br>
+        → <strong>솔루션:</strong> 작업 시작 전 "이 작업의 품질 기준은 X" 합의.
+      </div>
+      <div class="cf-box">
+        <strong>${S.name} ↔ 건희(ADTC-EF)</strong><br><br>
+        <strong>궁합:</strong> 둘 다 Craftsperson → 품질 기준 일치. ${S.name}이 Explicit → 건희가 원하는 상세 문서 자연스럽게 제공.<br><br>
+        <strong>마찰:</strong> 판단 기점 차이. ${S.name}은 Self-Directed, 건희는 AI-Directed. 건희가 AI에서 다른 옵션을 발견하면 충돌 가능.<br>
+        → <strong>솔루션:</strong> ${S.name}이 넘길 때 "방향의 이유 + 검토하지 않은 대안" 명시.
+      </div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">8.4 협업 파이프라인</div>
+      <div class="pl-step"><span class="tg t-s">STOP</span><strong>PM</strong> — 문제 정의 + 우선순위</div>
+      <div class="pl-step"><span class="tg t-t">THINK</span><strong>PM</strong> — PRD 작성 (사고 사다리 4단계)</div>
+      <div class="pl-arrow">↓ PM → Design: 3줄 요약 + 전략 의도 + 기각 방향</div>
+      <div class="pl-step"><span class="tg t-a">자유</span><strong>Design</strong> — 옵션 탐색 (AI 활용)</div>
+      <div class="pl-step"><span class="tg t-s">STOP</span><strong>Design</strong> — 방향 결정</div>
+      <div class="pl-arrow">↓ Design → Eng: 선택 이유 3줄 + 기각 옵션 + 해석 여지</div>
+      <div class="pl-step"><span class="tg t-a">자유</span><strong>Eng</strong> — 구현</div>
+      <div class="pl-step"><span class="tg t-t">THINK</span><strong>Eng</strong> — 코드 리뷰 (사고 사다리)</div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">8.6 팀 사각지대</div>
+      <div style="font-size:13px;color:#ccc;line-height:1.8">
+        <strong style="color:#f87171">⚠️ 사각지대:</strong><br>
+        - 우석(Leverager)과 나머지(Craftsperson)의 품질 기대 차이 → 작업 시작 전 품질 기준 합의 필수<br>
+        - AI-Directed 멤버(건희, 우석)의 reasoning이 결과물에서 빠질 위험 → 전달 시 "왜 이 방향?" 3줄 강제<br>
+        - UXR↔Eng 직접 전달 경로 없음 → 중요한 리서치는 아롬→건희 직접 전달 루트 추가
+      </div>
+    </div>
+
+    <div class="rpt">
+      <div class="st">8.7 추천 팀 룰</div>
+      <div style="font-size:13px;color:#ccc;line-height:1.8">
+        1. 결과물 전달 시 <strong>"reasoning 3줄"</strong> 필수<br>
+        2. 최종 판단은 반드시 <strong>사람이 먼저</strong><br>
+        3. 작업 시작 전 <strong>"품질 기준 한 문장"</strong> 합의<br>
+        4. 피드백은 <strong>질문 형태</strong>로
+      </div>
+    </div>
+
+    <div class="nv">
+      <button class="bt bg" onclick="showPhase(5)">← 팀 관리</button>
+      <button class="bt bp" onclick="downloadTeamZip()">📥 team.zip 다운로드</button>
+    </div>
+  `;
+}
+
+// ===== ZIP DOWNLOAD =====
+async function downloadPersonalZip(){
+  const reportMd=S.generatedReport||'(리포트 생성 실패)';
+  const nameMd=S.generatedMd||'(md 생성 실패)';
+  const zip=new JSZip();
+  zip.file(`${S.name}-report.md`,reportMd);
+  zip.file(`${S.name}.md`,nameMd);
+  const blob=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${S.name}.zip`;
+  a.click();
+}
+
+async function downloadTeamZip(){
+  const sc=calcScores();const type=getType(sc);const lit=getLitLevel();
+
+  const claudeMd=`# 팀 AI 협업 룰
+
+## 사용자 확인
+세션 시작 시 누구인지 확인하고 .claude/{이름}.md를 읽고 따르세요.
+특히 🔴 STOP 업무에서는 결과를 먼저 생성하지 마세요.
+
+## 팀 구성
+- ${S.name} (${type}) — ${S.role} · Lv${lit.lv}
+- 건희 (ADTCEF) — Engineering · Lv3
+- 우석 (AGELIB) — Design · Lv2
+- 아롬 (SGTCEF) — UX Research · Lv3
+
+## 팀 공통 룰
+1. 최종 판단은 반드시 사람이 먼저
+2. 결과물 전달 시 "reasoning 3줄" 필수
+3. 작업 시작 전 "품질 기준 한 문장" 합의
+4. 피드백은 질문 형태로
+
+## 결과물 전달 룰
+### PM → Design
+3줄 요약 필수 (우석은 Implicit — 본문 안 읽을 수 있음)
+필수: 전략 의도 + 기각한 방향
+
+### PM → Eng
+필수: 유저 시나리오(엣지케이스) + 기술 제약 + 우선순위 근거
+
+### Design → Eng
+필수: 선택 이유 3줄 + 기각 옵션 + 해석 여지
+주의: 우석(Implicit)이 이유 안 쓸 수 있음 → 강제
+
+## 사후 성찰
+결과물 후: "직접 했다면 다르게 했을 부분이 있나요?"
+`;
+
+  const teamReportMd=`# 팀 AI 협업 리포트
+
+## 팀 구성
+| 이름 | 역할 | 유형 | 리터러시 |
+|------|------|------|---------|
+| ${S.name} | ${S.role} | ${type} | Lv${lit.lv} |
+| 건희 | Engineering | ADTCEF | Lv3 |
+| 우석 | Design | AGELIB | Lv2 |
+| 아롬 | UX Research | SGTCEF | Lv3 |
+
+## 마찰 지점
+### ${S.name} ↔ 우석
+- 소통 갭: Explicit vs Implicit → 3줄 요약 필수
+- 품질 갭: Craftsperson vs Leverager → 품질 기준 사전 합의
+
+### ${S.name} ↔ 건희
+- 궁합: 둘 다 Craftsperson → 품질 기준 일치
+- 마찰: Self-Directed vs AI-Directed → 방향 이유 명시
+
+## 추천 팀 룰
+1. reasoning 3줄 필수
+2. 최종 판단은 사람 먼저
+3. 품질 기준 한 문장 합의
+4. 피드백은 질문 형태
+`;
+
+  const zip=new JSZip();
+  zip.file('team-report.md',teamReportMd);
+  zip.file('CLAUDE.md',claudeMd);
+  // Add personal files (simplified for prototype)
+  zip.file(`${S.name}.md`,`# ${S.name} — ${S.role} · ${type} · Lv${lit.lv}\n(팀 맥락 보강 버전 — 프로토타입)`);
+  zip.file('건희.md','# 건희 — Engineering · ADTCEF · Lv3\n(가상 데이터)');
+  zip.file('우석.md','# 우석 — Design · AGELIB · Lv2\n(가상 데이터)');
+  zip.file('아롬.md','# 아롬 — UX Research · SGTCEF · Lv3\n(가상 데이터)');
+  const blob=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='team.zip';
+  a.click();
+}
+
+// ===== PHASE SHOW OVERRIDE =====
+const _showPhase=showPhase;
+showPhase=function(n){
+  if(n===5) buildTeamPageContent();
+  _showPhase(n);
+};
+
+init();
+</script>
+</body>
+</html>
