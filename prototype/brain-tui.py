@@ -20,6 +20,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Header, Footer, Static, Label, Rule
 from textual.reactive import reactive
+from textual import work
 from rich.text import Text
 
 # ═══════════════════════════════════════
@@ -149,6 +150,7 @@ def parse_trace(filepath):
             "결정사항", "결정사항 / Decision", "결정"), 200),
         "insight": clean_text(get_section(sections,
             "인사이트", "인사이트 / Insights", "이 세션에서 알게 된 것", "알게 된 것"), 200),
+        "open_thinking": fm.get("open_thinking", []),
     }
 
 
@@ -252,6 +254,26 @@ class PeriodButton(Static):
         return Text(f"  {self.period_label}  ", style="dim")
 
 
+class ModeButton(Static):
+    def __init__(self, mode, label, **kwargs):
+        super().__init__(**kwargs)
+        self.mode = mode
+        self.mode_label = label
+
+    def on_click(self):
+        self.app.view_mode = self.mode
+        self.app.refresh_view()
+
+    def render(self):
+        selected = self.app.view_mode == self.mode
+        if selected:
+            color = "bright_blue"
+            if hasattr(self.app, 'roles') and self.app.selected_role in self.app.roles:
+                color = self.app.roles[self.app.selected_role]["color"]
+            return Text(f" [{self.mode_label}] ", style=f"bold {color} on grey15")
+        return Text(f"  {self.mode_label}  ", style="dim")
+
+
 class TraceItem(Static):
     def __init__(self, trace, color, is_first=False, **kwargs):
         super().__init__(**kwargs)
@@ -316,6 +338,9 @@ class BrainApp(App):
     #period-bar { height: 3; padding: 1 0 0 0; layout: horizontal; }
     PeriodButton { width: auto; min-width: 8; height: 1; }
     PeriodButton:hover { background: #14141e; }
+    #mode-bar { height: 1; padding: 0 0 0 1; layout: horizontal; }
+    ModeButton { width: auto; min-width: 8; height: 1; }
+    ModeButton:hover { background: #14141e; }
     #mind-section { height: auto; background: #0e0e16; border: solid #1c1c2a; margin: 1 0; padding: 0; }
     #content-scroll { height: 1fr; }
     #timeline-header { padding: 1 0 0 1; color: #8888a0; }
@@ -340,6 +365,7 @@ class BrainApp(App):
         Binding("7", "drill_3", "고민3"),
         Binding("8", "drill_4", "고민4"),
         Binding("9", "drill_5", "고민5"),
+        Binding("t", "toggle_thinking", "사고할것", priority=True),
         Binding("r", "reload", "새로고침"),
         Binding("q", "quit", "종료"),
     ]
@@ -347,6 +373,7 @@ class BrainApp(App):
     selected_role = reactive("", init=False)
     selected_period = reactive(30, init=False)
     search_query = reactive("", init=False)
+    view_mode = reactive("brain", init=False)  # "brain" | "thinking"
 
     def __init__(self, repo_root):
         super().__init__()
@@ -373,12 +400,48 @@ class BrainApp(App):
                         yield PeriodButton(days, label)
                     yield Static("", id="search-display")
                 with ScrollableContainer(id="content-scroll"):
+                    with Horizontal(id="mode-bar"):
+                        yield ModeButton("brain", "뇌지도")
+                        yield ModeButton("thinking", "사고할것")
                     yield Static(id="mind-section")
                     yield Label("  사고 흐름", id="timeline-header")
         yield Footer()
 
+    def _get_traces_fingerprint(self):
+        """trace 디렉토리의 파일 개수 + 최신 mtime으로 변경 감지용 fingerprint 생성."""
+        docs = self.repo_root / "docs" / "roles"
+        if not docs.exists():
+            return (0, 0)
+        count = 0
+        latest_mtime = 0
+        for role_dir in docs.iterdir():
+            traces_dir = role_dir / "traces"
+            if not traces_dir.exists():
+                continue
+            for f in traces_dir.glob("*.md"):
+                count += 1
+                mt = f.stat().st_mtime
+                if mt > latest_mtime:
+                    latest_mtime = mt
+        return (count, latest_mtime)
+
+    def _check_for_updates(self):
+        """주기적으로 trace 파일 변경을 감지하여 자동 reload."""
+        new_fp = self._get_traces_fingerprint()
+        if new_fp != self._traces_fingerprint:
+            self._traces_fingerprint = new_fp
+            self.all_traces = load_all(self.repo_root)
+            self.roles = discover_roles(self.all_traces)
+            self.role_order = sorted(self.roles.keys(), key=lambda r: self.roles[r]["last_date"], reverse=True)
+            self._brain_cache.clear()
+            self._thinking_todo_cache.clear()
+            self.refresh_view()
+            self.notify("새 trace 감지 — 자동 새로고침")
+
     def on_mount(self):
         self.selected_role = self._initial_role
+        self._traces_fingerprint = self._get_traces_fingerprint()
+        self.set_interval(15, self._check_for_updates)  # 15초마다 체크
         self.refresh_view()
 
     def watch_selected_role(self, value):
@@ -570,6 +633,109 @@ class BrainApp(App):
             seen.append({"label": t["topic"], "detail": "", "weight": 100 // max(len(traces[:5]), 1)})
         return seen
 
+    # ── Thinking Todos: 열린 사고 질문 추출 ──
+
+    _thinking_todo_cache = {}  # (role, period) -> thinking todo result
+
+    def _analyze_thinking_todos(self, traces, role, period):
+        """Claude가 traces를 읽고 아직 열린 사고 질문을 추출."""
+        cache_key = (role, period)
+        if cache_key in self._thinking_todo_cache:
+            return self._thinking_todo_cache[cache_key]
+
+        mind_traces = [t for t in traces if t["type"] != "meeting"]
+        if not mind_traces:
+            return []
+
+        # 시간순 정렬 (오래된 → 최신) — Claude가 해결 여부를 판단하도록
+        sorted_traces = sorted(mind_traces, key=lambda t: (t["date"], t.get("mtime", 0)))
+
+        trace_texts = []
+        for t in sorted_traces:
+            entry = (
+                f"- {t['date']} | {t['topic']} | "
+                f"summary: {t.get('summary','')[:300]} | "
+                f"insight: {t.get('insight','')[:200]} | "
+                f"decision: {t.get('decision','')[:200]}"
+            )
+            # open_thinking 필드가 있으면 포함
+            ot = t.get("open_thinking")
+            if ot:
+                if isinstance(ot, list):
+                    entry += f" | open_thinking: {'; '.join(ot)}"
+                else:
+                    entry += f" | open_thinking: {ot}"
+            trace_texts.append(entry)
+
+        prompt = (
+            f"아래는 한 팀원({role})의 최근 작업 기록(traces)을 시간순으로 정리한 것이다.\n\n"
+            + "\n".join(trace_texts)
+            + "\n\n이 사람이 **아직 해결하지 않은** '생각해야 할 질문'을 3~7개 뽑아줘.\n\n"
+            f"중요: traces는 시간순이다. 이전 trace에서 제기된 질문이 이후 trace에서 "
+            f"결정/해결되었으면 반드시 제외하라.\n\n"
+            f"태스크('~를 구현해라')가 아니라 사고 질문('~인지 어떻게 알지?', '~가 맞는 건지?')이어야 한다.\n\n"
+            f"소스:\n"
+            f"- trace에서 제기됐지만 아직 답이 없는 질문\n"
+            f"- 결정을 보류/다음으로 넘긴 것\n"
+            f"- open_thinking 필드에 명시된 것\n"
+            f"- '다음주 할 것', '~에게 필요한 것' 등 forward-looking 내용\n\n"
+            f"각 항목:\n"
+            f"- question: 질문 형태 (이 사람이 생각해야 할 것)\n"
+            f"- context: 왜 이걸 생각해야 하는지 한 줄\n"
+            f"- urgency: 'blocking' (다른 결정이 막힘) / 'important' (품질에 영향) / 'exploratory' (탐색적)\n"
+            f"- source_date: 이 질문이 나온 trace 날짜\n\n"
+            f'JSON 배열만: [{{"question":"...", "context":"...", "urgency":"blocking|important|exploratory", "source_date":"YYYY-MM-DD"}}, ...]'
+            f"\n\n이미 해결된 질문은 절대 포함하지 마라."
+        )
+
+        client = self._get_api_client()
+        if not client:
+            return self._fallback_thinking_todos(sorted_traces)
+
+        try:
+            response = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=800,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = response.content[0].text.strip()
+            match = re.search(r'\[.*\]', text, re.DOTALL)
+            if match:
+                result = json.loads(match.group())
+                self._thinking_todo_cache[cache_key] = result
+                return result
+        except Exception:
+            pass
+        return self._fallback_thinking_todos(sorted_traces)
+
+    def _fallback_thinking_todos(self, traces):
+        """API 없을 때 — open_thinking 필드 + 미체크 항목에서 구조적 추출."""
+        todos = []
+        for t in reversed(traces):  # 최신부터
+            # open_thinking 필드에서 추출
+            ot = t.get("open_thinking")
+            if ot:
+                items = ot if isinstance(ot, list) else [ot]
+                for q in items:
+                    if q and q != "없음":
+                        todos.append({
+                            "question": q,
+                            "context": f"{t['topic']}에서 제기됨",
+                            "urgency": "important",
+                            "source_date": t["date"],
+                        })
+            # topic을 최근 사고로 표시 (최대 3개)
+            if len(todos) < 3:
+                todos.append({
+                    "question": t["topic"],
+                    "context": "최근 사고 주제",
+                    "urgency": "exploratory",
+                    "source_date": t["date"],
+                })
+            if len(todos) >= 7:
+                break
+        return todos[:7]
+
     def _analyze_thought_evolution(self, traces, theme_label):
         """선택된 고민 주제의 시간에 따른 변화를 분석."""
         mind_traces = [t for t in traces if t["type"] != "meeting"]
@@ -634,10 +800,10 @@ class BrainApp(App):
         events = self.get_filtered()
 
         period_label = "전체" if self.selected_period >= 9999 else f"{self.selected_period}일"
-        mind_text = Text()
 
         if query:
-            # Search mode — show search results
+            # Search mode — 즉시 렌더링 (검색은 별도 처리)
+            mind_text = Text()
             mind_traces = sorted([t for t in events if t["type"] != "meeting"],
                                  key=lambda t: (t["date"], t.get("mtime", 0)), reverse=True)
             mind_text.append(f"  검색 결과: \"{query}\" ", style="bold bright_yellow")
@@ -656,39 +822,35 @@ class BrainApp(App):
                         mind_text.append(f"{excerpt}\n", style="italic bright_yellow")
                     mind_text.append(f"  | ", style="grey23")
                     mind_text.append(f"{t['date']}\n", style="dim")
+            self.query_one("#mind-section", Static).update(mind_text)
         else:
-            # Brain map mode — 사고 에너지 분석
-            mind_text.append(f"  지금 머릿속 ", style="bold")
-            mind_text.append(f"(최근 {period_label})\n", style="dim")
-            mind_text.append("  -" * 20 + "\n", style="grey23")
+            # 캐시 히트면 즉시 렌더링, 미스면 로딩 표시 후 비동기 분석
+            cache_key = (role, self.selected_period)
 
-            brain = self._analyze_brain(events, role, self.selected_period)
-            if not brain:
-                mind_text.append("\n  이 기간에 기록된 trace 없음\n", style="dim italic")
+            if self.view_mode == "brain" and cache_key in self._brain_cache:
+                self._render_brain(self._brain_cache[cache_key], color, period_label)
+            elif self.view_mode == "thinking" and cache_key in self._thinking_todo_cache:
+                self._render_thinking_todos(self._thinking_todo_cache[cache_key], color, period_label)
             else:
-                self._current_brain = brain  # store for drill-down
-                for i, item in enumerate(brain):
-                    w = item.get("weight", 0)
-                    bar_len = max(1, int(w / 100 * 30))
-                    bar = "█" * bar_len
+                # 로딩 표시 후 백그라운드 분석
+                loading = Text()
+                if self.view_mode == "brain":
+                    loading.append(f"  지금 머릿속 ", style="bold")
+                    loading.append(f"(최근 {period_label})\n", style="dim")
+                else:
+                    loading.append(f"  생각해야 할 것 ", style="bold")
+                    loading.append(f"(최근 {period_label})\n", style="dim")
+                loading.append("  -" * 20 + "\n", style="grey23")
+                loading.append("\n  ⏳ 분석 중...\n", style="dim italic")
+                self.query_one("#mind-section", Static).update(loading)
+                self._load_mind_async(events, role, self.selected_period, color, period_label)
 
-                    mind_text.append(f"\n  ", style="")
-                    mind_text.append(f"[{i+1}] ", style="bold " + color if i == 0 else "bold grey50")
-                    mind_text.append(f"{item['label']}\n", style="bold" if i == 0 else "")
-                    mind_text.append(f"      ", style="")
-                    mind_text.append(f"{bar} {w}%\n", style=color if i == 0 else "grey42")
-                    if item.get("detail"):
-                        mind_text.append(f"      ", style="")
-                        mind_text.append(f"{item['detail']}\n", style="dim")
-
-                mind_text.append(f"\n  숫자 키(5-9)로 고민 선택 → 변화 보기\n", style="dim italic")
-
-        self.query_one("#mind-section", Static).update(mind_text)
-
-        # Period & role buttons
+        # Period & role & mode buttons — 즉시 갱신
         for btn in self.query(PeriodButton):
             btn.refresh()
         for btn in self.query(RoleButton):
+            btn.refresh()
+        for btn in self.query(ModeButton):
             btn.refresh()
 
         # Timeline — mount into content-scroll, after mind-section and header
@@ -711,6 +873,80 @@ class BrainApp(App):
                 cur_date = t["date"]
                 container.mount(Label(f"  -- {t['date']} {'--' * 20}"))
             container.mount(TraceItem(t, color, is_first=(i == 0)))
+
+    @work(thread=True)
+    def _load_mind_async(self, events, role, period, color, period_label):
+        """백그라운드 스레드에서 API 호출 후 UI 갱신."""
+        if self.view_mode == "brain":
+            result = self._analyze_brain(events, role, period)
+            self.call_from_thread(self._render_brain, result, color, period_label)
+        else:
+            result = self._analyze_thinking_todos(events, role, period)
+            self.call_from_thread(self._render_thinking_todos, result, color, period_label)
+
+    def _render_brain(self, brain, color, period_label):
+        """뇌지도 결과를 mind-section에 렌더링."""
+        mind_text = Text()
+        mind_text.append(f"  지금 머릿속 ", style="bold")
+        mind_text.append(f"(최근 {period_label})\n", style="dim")
+        mind_text.append("  -" * 20 + "\n", style="grey23")
+
+        if not brain:
+            mind_text.append("\n  이 기간에 기록된 trace 없음\n", style="dim italic")
+        else:
+            self._current_brain = brain
+            for i, item in enumerate(brain):
+                w = item.get("weight", 0)
+                bar_len = max(1, int(w / 100 * 30))
+                bar = "█" * bar_len
+
+                mind_text.append(f"\n  ", style="")
+                mind_text.append(f"[{i+1}] ", style="bold " + color if i == 0 else "bold grey50")
+                mind_text.append(f"{item['label']}\n", style="bold" if i == 0 else "")
+                mind_text.append(f"      ", style="")
+                mind_text.append(f"{bar} {w}%\n", style=color if i == 0 else "grey42")
+                if item.get("detail"):
+                    mind_text.append(f"      ", style="")
+                    mind_text.append(f"{item['detail']}\n", style="dim")
+
+            mind_text.append(f"\n  숫자 키(5-9)로 고민 선택 → 변화 보기\n", style="dim italic")
+
+        self.query_one("#mind-section", Static).update(mind_text)
+
+    def _render_thinking_todos(self, todos, color, period_label):
+        """사고 투두 결과를 mind-section에 렌더링."""
+        mind_text = Text()
+        mind_text.append(f"  생각해야 할 것 ", style="bold")
+        mind_text.append(f"(최근 {period_label})\n", style="dim")
+        mind_text.append("  -" * 20 + "\n", style="grey23")
+
+        if not todos:
+            mind_text.append("\n  열린 질문 없음\n", style="dim italic")
+        else:
+            self._current_todos = todos
+            urgency_order = {"blocking": 0, "important": 1, "exploratory": 2}
+            todos.sort(key=lambda x: urgency_order.get(x.get("urgency", "exploratory"), 2))
+
+            urgency_icons = {"blocking": "⚡", "important": "◆", "exploratory": "○"}
+            urgency_colors = {"blocking": "bright_red", "important": "bright_yellow", "exploratory": "grey50"}
+
+            for i, todo in enumerate(todos):
+                urg = todo.get("urgency", "exploratory")
+                icon = urgency_icons.get(urg, "○")
+                urg_color = urgency_colors.get(urg, "grey50")
+
+                mind_text.append(f"\n  {icon} ", style=urg_color)
+                mind_text.append(f"[{i+1}] ", style="bold " + urg_color)
+                mind_text.append(f"{todo['question']}\n", style="bold" if urg == "blocking" else "")
+                if todo.get("context"):
+                    mind_text.append(f"      ", style="")
+                    mind_text.append(f"{todo['context']}\n", style="dim")
+                if todo.get("source_date"):
+                    mind_text.append(f"      ", style="")
+                    mind_text.append(f"← {todo['source_date']}\n", style="grey30")
+
+        mind_text.append(f"\n  (Claude 분석 기반 — 실제와 다를 수 있음)\n", style="dim italic")
+        self.query_one("#mind-section", Static).update(mind_text)
 
     def action_search(self):
         """Open search input dialog."""
@@ -743,6 +979,10 @@ class BrainApp(App):
             pass
         self.refresh_view()
 
+    def action_toggle_thinking(self):
+        self.view_mode = "thinking" if self.view_mode == "brain" else "brain"
+        self.refresh_view()
+
     def action_period_1(self):
         self.selected_period = 1
     def action_period_7(self):
@@ -754,6 +994,7 @@ class BrainApp(App):
 
     # ── Drill down into a brain theme ──
     _current_brain = []
+    _current_todos = []
 
     def _drill_into(self, index):
         if not self._current_brain or index >= len(self._current_brain):
@@ -793,6 +1034,7 @@ class BrainApp(App):
         self.roles = discover_roles(self.all_traces)
         self.role_order = sorted(self.roles.keys(), key=lambda r: self.roles[r]["last_date"], reverse=True)
         self._brain_cache.clear()
+        self._thinking_todo_cache.clear()
         self.refresh_view()
         self.notify("새로고침 완료")
 
