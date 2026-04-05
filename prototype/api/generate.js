@@ -1,8 +1,11 @@
-export const config = {
+const config = {
   maxDuration: 120,
 };
 
-export default async function handler(req, res) {
+module.exports = handler;
+module.exports.config = config;
+
+async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
