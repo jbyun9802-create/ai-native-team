@@ -568,16 +568,7 @@ ${dataJson}
     return;
   }
 
-  // Parse response
-  let reportMd='', nameMd='';
-  const reportMatch=result.match(/===REPORT_START===([\s\S]*?)===REPORT_END===/);
-  const mdMatch=result.match(/===MD_START===([\s\S]*?)===MD_END===/);
-  reportMd=reportMatch?reportMatch[1].trim():result;
-  nameMd=mdMatch?mdMatch[1].trim():'# '+S.name+' — '+S.role+'\n\n(생성 실패 — 다시 시도하세요)';
-
-  // Store for zip download
-  S.generatedReport=reportMd;
-  S.generatedMd=nameMd;
+  // reportMd와 nameMd는 이미 위에서 S.generatedReport, S.generatedMd에 저장됨
 
   // Render
   document.getElementById('rptContent').innerHTML=`
@@ -606,12 +597,12 @@ ${dataJson}
     </div>
 
     <div class="rpt">
-      <div style="font-size:14px;color:#ccc;line-height:1.8">${mdToHtml(reportMd)}</div>
+      <div style="font-size:14px;color:#ccc;line-height:1.8">${mdToHtml(S.generatedReport)}</div>
     </div>
 
     <div class="rpt">
       <div class="st">📥 ${S.name}.md (Claude Code 룰)</div>
-      <div style="background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.6;color:#a5b4fc;white-space:pre-wrap;max-height:500px;overflow-y:auto">${nameMd}</div>
+      <div style="background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.6;color:#a5b4fc;white-space:pre-wrap;max-height:500px;overflow-y:auto">${S.generatedMd}</div>
     </div>
 
     <div class="nv">
@@ -903,7 +894,7 @@ showPhase=function(n){
   _showPhase(n);
 };
 
-init();
+try{ init(); }catch(e){ document.body.innerHTML='<pre style="color:red;padding:20px">ERROR: '+e.message+'\n'+e.stack+'</pre>'; }
 </script>
 </body>
 </html>

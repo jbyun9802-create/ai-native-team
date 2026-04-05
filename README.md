@@ -57,26 +57,37 @@ ai-native-team/
 │   │   ├── metadata-standard.md
 │   │   └── TEMPLATE-trace.md
 │   ├── shared/              # 팀 전체 공유 문서
-│   │   ├── announcements/   # 팀 공지
 │   │   ├── meetings/        # 미팅 기록 (원문 + 요약)
 │   │   │   └── YYYY-MM-DD-주제/
 │   │   │       ├── raw-chat.txt
 │   │   │       ├── raw-transcript.txt
 │   │   │       └── summary.md
-│   │   └── product/         # 프로덕트 문서 (단계별)
-│   │       ├── planning/    # 기획: PRD, 문제 분석
-│   │       ├── design/      # 디자인: 와이어프레임, 목업
-│   │       ├── specs/       # 개발 명세: API, 데이터 모델
+│   │   └── product/         # 프로덕트 문서
+│   │       ├── prd/         # PRD
+│   │       ├── specs/       # 개발 명세 + 사고 프레임워크
+│   │       ├── storybook/   # 유저 스토리
+│   │       ├── research/    # 리서치
 │   │       ├── validation/  # 검증: 테스트, 피드백
-│   │       └── diagrams/    # 다이어그램
+│   │       └── assets/      # 에셋 (다이어그램 등)
 │   └── roles/               # 롤별 개인 작업 공간
 │       ├── pm/
+│       │   └── traces/      # AI 대화 사고 기록
 │       ├── engineering/
 │       ├── design/
 │       ├── uxr/
 │       └── gtm/
-└── src/                     # 프로덕트 코드 (추후)
+├── prototype/               # 프로토타입 코드
+└── .claude/
+    └── commands/
+        └── save.md          # /save — 프레임워크 기반 사고 기록 저장
 ```
+
+## 커맨드
+
+- `/save` — AI 대화 후 사고 프레임워크에 맞춰 trace 기록 저장
+- `/bug` — 버그 리포트를 GitHub 이슈로 등록
+- `/question` — 질문을 GitHub 이슈로 등록
+- `/feedback` — 피드백/제안을 GitHub 이슈로 등록
 
 ## 미팅 기록
 

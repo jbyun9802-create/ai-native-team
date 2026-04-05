@@ -14,10 +14,13 @@ status: draft
 
 | 항목 | 내용 |
 |------|------|
-| 총 문항수 | ~78문항 |
+| 총 문항수 | ~88문항 (프로파일 3 + 리터러시 ~25 + 강제선택 60) |
 | 소요 시간 | ~20분 |
 | 측정 축 | 6축 (AI 협업 4축 + 팀 협업 2축) + AI 리터러시 레벨 |
-| 출력 | 개인 리포트 + {이름}.md + 팀 리포트 + CLAUDE.md + commands |
+| 테스트 구조 | 4 Phase: 프로파일 → 리터러시 → 강제선택 60쌍 → 확인 |
+| 출력 | 개인 리포트 + {이름}.md → zip 다운로드. 팀: team-report.md + CLAUDE.md + 전원 {이름}.md → 오너에게 이메일 |
+| 비용 | 무료 (API 비용 우리 부담, ~120원/건) |
+| 인프라 | Vercel + Supabase(임시저장+매직링크) + Resend(이메일) + Claude API |
 
 ---
 
@@ -667,8 +670,8 @@ Robin과 건희는 둘 다 Craftsperson → 상세 문서 궁합 좋음
    - 우리 팀 유형 조합에 맞춤화된 업무 흐름
    - 각 단계에서 누가 어떤 유형이라 이렇게 하면 좋다
 
-5. 핸드오프 프로토콜
-   - 모든 역할 조합에 대해 필수 포함 정보
+5. 결과물 전달 룰
+   - 모든 역할+유형 조합에 대해 필수 포함 정보
 
 6. 팀 사각지대
    - 팀 전체에 부족한 축
@@ -676,4 +679,422 @@ Robin과 건희는 둘 다 Craftsperson → 상세 문서 궁합 좋음
 
 7. 추천 팀 룰
    - 팀 유형 조합에서 자연스럽게 도출되는 규칙들
+```
+
+---
+
+## Part 4: 유저 플로우
+
+### 개인 (무료, 가입 없이)
+
+```
+1. 대시보드 접속 → 이메일 매직 링크 로그인 (Supabase Auth)
+2. 이름, 역할, seniority 입력 (3문항)
+3. AI 리터러시 체크 — 직무별 경험 체크박스 (~25문항)
+4. 강제 선택 60쌍 (~15분)
+5. 완료 → Claude API가 분석 → 개인 리포트 즉시 생성
+6. zip 다운로드: {이름}-report.md + {이름}.md
+7. .claude/ 폴더에 넣으면 바로 적용
+```
+
+### 팀 (오너가 초대)
+
+```
+8. 오너가 "팀 만들기" → 팀원 이메일로 초대 (Resend)
+9. 초대받은 팀원들이 각자 테스트 완료
+   (개인 결과는 Supabase에 임시 저장, 7일 후 삭제)
+10. 전원 완료 → 팀 리포트 자동 생성
+11. 오너에게 이메일로 team.zip 전송:
+    team-report.md + CLAUDE.md + 전원 {이름}.md + 전원 {이름}-report.md
+12. 오너가 .claude/ 폴더에 넣고 git push → 끝
+```
+
+---
+
+## Part 5: 인프라
+
+| 구성 요소 | 기술 | 비용 |
+|-----------|------|------|
+| 대시보드 | Next.js 또는 정적 HTML (Vercel 배포) | $0 |
+| 분석 엔진 | Claude API (서버사이드, 우리 키) | 1인당 ~$0.09 |
+| 임시 저장 | Supabase (팀 테스트 결과, 7일 삭제) | 무료 티어 |
+| 인증 | Supabase Auth 매직 링크 (이메일만, 비번 없음) | 무료 티어 |
+| 이메일 | Resend (팀 초대 + zip 전송, 월 100건) | 무료 티어 |
+| zip 생성 | JSZip (서버 메모리에서 생성) | $0 |
+| 파일 전달 | 개인: 브라우저 다운로드 / 팀: 이메일 첨부 | $0 |
+
+**무료 서비스. GitHub 연동 없음. 보안 걱정 없음.**
+
+---
+
+## Part 6: 테스트 구조 요약
+
+```
+Phase 1: 프로파일 (1분)
+  - 이름, 역할 (PM/Eng/Design/UXR/Growth), seniority
+
+Phase 2: AI 리터러시 (3분)
+  - 직무별 경험 체크 (기초→업무→고급→Eval→프로토→배포→시스템→끝판왕)
+  - 체크 수 + 단계 위치 → Lv1~5
+
+Phase 3: 강제 선택 60쌍 (15분)
+  - 축 1: 판단 기점 S/A (10쌍)
+  - 축 2: 협업 깊이 D/G (10쌍)
+  - 축 3: AI 이해도 T/E (10쌍)
+  - 축 4: 품질 관여 C/L (10쌍)
+  - 축 5: 소통 스타일 E/I (10쌍)
+  - 축 6: 갈등 대처 F/B (10쌍)
+  - 타이머 없음. 5점 척도. 축 순서 섞어서 출제.
+
+
+
+---
+
+## Part 7: 개발자용 변환 로직 상세
+
+> 이 섹션은 개발자가 보고 바로 구현할 수 있는 수준의 상세 스펙입니다.
+> 프로토타입 참조: `prototype/assessment.html`
+
+---
+
+### 7.1 점수 계산 알고리즘 (클라이언트 사이드)
+
+#### 6축 점수 계산
+
+입력: 60쌍 답변 배열 (각 -2 ~ +2). 각 쌍에는 ax 속성(1~6)이 있어 어떤 축을 측정하는지 표시.
+
+```
+calcScores(answers, shuffledPairs):
+  축별 합산: sums[pair.ax] += answers[i]
+  // answers[i]: -2(강하게 왼쪽) ~ 0(중립) ~ +2(강하게 오른쪽)
+  // 축별 10쌍 합산 범위: -20 ~ +20
+  
+  정규화: scores[ax] = round(50 + (sums[ax] / count[ax]) * 25)
+  // 결과 범위: 0~100 (50 = 정중앙)
+  // 50 미만 = 왼쪽 극, 50 이상 = 오른쪽 극
+```
+
+| 축 | 왼쪽 극 (<50%) | 글자 | 오른쪽 극 (>=50%) | 글자 |
+|----|---------------|------|-----------------|------|
+| 1 | Self-Directed | S | AI-Directed | A |
+| 2 | Directive | D | Dialogic | G |
+| 3 | Strategic | T | Experimental | E |
+| 4 | Craftsperson | C | Leverager | L |
+| 5 | Explicit | E | Implicit | I |
+| 6 | Firm | F | Bridging | B |
+
+#### 유형 판정
+
+```
+getType(scores):
+  각 축 50% 기준으로 왼쪽/오른쪽 글자 배정
+  6글자 코드 반환
+  
+  예: scores = {1:35, 2:65, 3:30, 4:25, 5:40, 6:45}
+  → 축1<50=S, 축2>=50=G, 축3<50=T, 축4<50=C, 축5<50=E, 축6<50=F
+  → "SGTCEF"
+```
+
+#### AI 리터러시 레벨 산출
+
+```
+getLitLevel(litChecks):
+  totalChecks = 체크된 항목 수
+  
+  끝판왕 항목 1개 이상 체크 → Lv5 (아키텍트)
+  시스템설계/워킹프로덕트 1개 이상 → Lv4 (시스템 설계)
+  총 15개 이상 → Lv3 (숙련)
+  총 8개 이상 → Lv2 (활용)
+  그 외 → Lv1 (입문)
+```
+
+---
+
+### 7.2 Claude API 호출 구조
+
+2회 분리 호출 (타임아웃 방지):
+
+```
+Call 1: 개인 리포트 → max_tokens: 4096
+Call 2: {이름}.md → max_tokens: 4096
+(팀) Call 3: 팀 리포트 → max_tokens: 4096
+(팀) Call 4: CLAUDE.md + {이름}.md 보강 → max_tokens: 4096
+```
+
+모델: claude-sonnet-4-20250514
+API endpoint: /api/generate (Vercel serverless, maxDuration: 120s)
+
+서버사이드 프록시 구조:
+- 프론트 → POST /api/generate (system, messages, max_tokens)
+- 서버 → Anthropic API (process.env.ANTHROPIC_API_KEY)
+- 서버 → 프론트에 응답 전달
+
+---
+
+### 7.3 Claude에 보내는 데이터 구조
+
+```
+{
+  name: "Robin",
+  role: "PM",
+  seniority: "Mid",
+  type: "SGTCEF",          // 유형 6글자 코드
+  typeName: "Collaborative Architect",  // 유형 이름 (매칭 테이블에서)
+  scores: {
+    ax1: 35, ax2: 65, ax3: 30, ax4: 25, ax5: 40, ax6: 45
+  },
+  literacy: {
+    level: 4,
+    name: "시스템 설계",
+    count: 18              // 체크한 경험 수
+  },
+  axes: [
+    {left:"Self-Directed", right:"AI-Directed", leftK:"내가 먼저 판단", rightK:"AI에서 출발", score:35, letter:"S"},
+    {left:"Directive", right:"Dialogic", leftK:"명확히 시키기", rightK:"대화하며 발전", score:65, letter:"G"},
+    {left:"Strategic", right:"Experimental", leftK:"전략적 활용", rightK:"실험적 탐험", score:30, letter:"T"},
+    {left:"Craftsperson", right:"Leverager", leftK:"꼼꼼히 다듬기", rightK:"빠르게 활용", score:25, letter:"C"},
+    {left:"Explicit", right:"Implicit", leftK:"맥락을 문서로", rightK:"핵심만 전달", score:40, letter:"E"},
+    {left:"Firm", right:"Bridging", leftK:"근거로 옹호", rightK:"합의를 찾음", score:45, letter:"F"}
+  ]
+}
+```
+
+---
+
+### 7.4 System Prompt (공통 — Call 1~4 모두 사용)
+
+```
+당신은 TeamBrain, AI 협업 인적성 분석가입니다.
+테스트 데이터를 분석하여 MBTI급 초상세 리포트를 생성합니다.
+
+규칙:
+- 한국어로 작성
+- 마크다운 형식
+- 구체적이고 행동 가능한 추천 (제네릭 금지)
+- 역할(PM/Eng/Design/UXR/Growth)의 핵심 업무 맥락에서 분석
+- 각 축의 점수가 50% 미만이면 왼쪽 극, 50% 이상이면 오른쪽 극
+- {이름}.md는 Claude Code가 실제로 읽고 따를 수 있는 구체적 룰로 작성
+
+6축:
+- 축1 판단기점: Self-Directed(S, <50%) vs AI-Directed(A, >=50%)
+- 축2 협업깊이: Directive(D, <50%) vs Dialogic(G, >=50%)
+- 축3 AI이해도: Strategic(T, <50%) vs Experimental(E, >=50%)
+- 축4 품질관여: Craftsperson(C, <50%) vs Leverager(L, >=50%)
+- 축5 소통스타일: Explicit(E, <50%) vs Implicit(I, >=50%)
+- 축6 갈등대처: Firm(F, <50%) vs Bridging(B, >=50%)
+```
+
+---
+
+### 7.5 Call 1 User Prompt: 개인 리포트
+
+```
+아래 테스트 결과를 분석하여 개인 리포트를 마크다운으로 생성하세요.
+
+## 테스트 데이터
+{7.3 JSON}
+
+## 리포트 구조 (각 섹션이 풍부하고 구체적이어야 합니다):
+
+### 1. 유형 개요
+- 유형 코드와 의미 설명 (2-3 단락)
+- 이 유형의 {역할}이 가장 빛나는 순간
+- 이 유형의 {역할}이 가장 위험한 순간
+- 강점 3가지 (구체적 업무 맥락)
+- 약점 3가지 (구체적 업무 맥락)
+
+### 2. 축별 심층 분석 (6축 각각)
+각 축에 대해:
+- 점수가 의미하는 것 (구체적 행동 예시)
+- {역할} 업무에 미치는 영향
+- 주의할 점
+
+### 3. AI 리터러시 분석
+- Lv{N}의 의미 + 유형과 결합 해석
+- 다음 레벨로 가기 위한 구체적 행동 3가지
+
+### 4. {역할} 핵심 업무별 AI 활용 가이드
+{역할}의 핵심 업무 8개 각각에 대해:
+- 이 유형이면 이 업무를 이렇게 하세요 (구체적)
+- STOP/THINK 여부와 이유
+
+### 5. 위험 패턴 & 방지법
+유형에서 도출된 함정 3-4가지. 각각:
+- 패턴 설명 + 감지 조건 + Claude가 할 경고
+
+### 6. 성장 추천
+약한 축을 키우는 구체적 행동 3가지
+```
+
+응답: 순수 마크다운. 예상 토큰: 입력 ~1500, 출력 ~3000-4000.
+
+---
+
+### 7.6 Call 2 User Prompt: {이름}.md
+
+```
+아래 테스트 결과를 분석하여 Claude Code 사고 강제 룰 파일을 생성하세요.
+이 파일은 Claude Code가 세션 시작 시 읽고 그대로 따르는 룰입니다.
+
+## 테스트 데이터
+{7.3 JSON}
+
+## 파일 구조:
+
+# {이름} — {역할} · {유형코드} · AI 리터러시 Lv{N}
+
+## 이 파일의 목적
+[핵심 특성 2-3문장 + 강점이 곧 함정이 되는 패턴 1-2문장]
+
+## STOP — 반드시 {이름}이 먼저 판단해야 하는 순간
+최소 3개. 각각:
+- 트리거 키워드 (어떤 요청이 오면)
+- "멈추고 물어보세요:" + 구체적 질문 3-4개
+- "{이름}이 답한 후에만 진행"
+
+## THINK — 단계별 사고가 필요한 업무
+최소 4개. 각각:
+- Step 1~4 구체적 질문
+- 각 단계에서 답을 듣고 다음으로
+- 건너뛰려 하면 경고
+
+## 결과물 작성 시 — 받는 사람 고려
+가상 팀원 3명에 대해: 유형 특성 + 결과물에 포함할 것 + 주의점
+
+## traces 저장 룰
+/save 시: 결정사항+이유, 기각한 대안, 다음에 알아야 할 것
+
+## 함정 패턴
+최소 3개. 각각: 설명 + 감지 조건 + Claude가 할 말
+```
+
+응답: 순수 마크다운. 이것이 그대로 .claude/{이름}.md 파일이 됨.
+
+핵심 품질 기준:
+- STOP: "절대 먼저 생성하지 마세요" — Claude Code가 실제로 멈추는 지시문
+- THINK: "각 단계에 사용자가 답한 후 다음으로" — 순차 진행 강제
+- 함정: "30분 이상 같은 문서를 다듬고 있으면" — 구체적 감지 조건
+
+---
+
+### 7.7 팀 리포트 생성 로직
+
+#### 교차 분석 (클라이언트 사이드, API 호출 전)
+
+```
+crossAnalyze(members):
+  // members: [{name, role, type, scores, literacy}, ...]
+  
+  모든 2인 조합에 대해:
+    6축 각각의 차이 계산
+    같은 축에서 반대 극이고 차이 30% 이상 → conflict
+    축5(소통)에서 E↔I → communication gap
+    축6(갈등)에서 F↔B → conflict style gap
+    축4(품질)에서 C↔L → quality expectation gap
+  
+  반환: { conflicts: [...], gaps: [...] }
+```
+
+#### Call 3 User Prompt: 팀 리포트
+
+```
+아래 팀 데이터를 분석하여 팀 리포트를 마크다운으로 생성하세요.
+
+## 팀 데이터
+{전원 개인 데이터 JSON + 교차 분석 결과}
+
+## 리포트 구조:
+1. 팀 유형 구성 (전원 유형+역할 한눈에)
+2. 팀 강점 (유형 조합에서 오는 구체적 강점)
+3. 팀 마찰 지점 — 모든 2인 조합:
+   - 어떤 축에서 차이, 업무 마찰, 구체적 솔루션
+4. 협업 파이프라인 (유형 맞춤)
+5. 역할별 인풋/아웃풋 (유형 기반)
+6. 팀 사각지대
+7. 추천 팀 룰
+```
+
+#### Call 4 User Prompt: CLAUDE.md + {이름}.md 보강
+
+```
+아래 팀 데이터를 기반으로 생성하세요.
+
+## 1. CLAUDE.md (팀 룰)
+- 사용자 확인 → .claude/{이름}.md 참조
+- 팀 구성 나열
+- 팀 공통 룰 3-4개
+- 결과물 전달 룰 (역할+유형 조합별)
+- 사후 성찰
+
+## 2. 각 팀원의 {이름}.md "결과물 작성 시" 보강 섹션
+실제 팀원 데이터(유형+역할) 기반 맞춤화.
+```
+
+---
+
+### 7.8 zip 생성
+
+#### 개인 zip
+
+```
+JSZip 사용 (브라우저에서):
+  zip.file("{이름}-report.md", Call 1 결과)
+  zip.file("{이름}.md", Call 2 결과)
+  → blob → 브라우저 다운로드
+```
+
+#### 팀 zip
+
+```
+JSZip 사용:
+  zip.file("team-report.md", Call 3 결과)
+  zip.file("CLAUDE.md", Call 4 결과의 CLAUDE.md 부분)
+  전원에 대해:
+    zip.file("{이름}.md", Call 4에서 보강된 md)
+    zip.file("{이름}-report.md", 각자 Call 1 결과)
+  
+  → blob → Resend API로 오너 이메일 전송 (base64 첨부)
+  또는 → 브라우저 직접 다운로드
+```
+
+#### 이메일 전송 (서버사이드)
+
+```
+// api/send-team-zip.js
+Resend API 사용:
+  to: ownerEmail
+  subject: "[TeamBrain] {팀명} 팀 리포트"
+  attachments: [{filename: "team.zip", content: zipBuffer (base64)}]
+```
+
+---
+
+### 7.9 전체 파이프라인 다이어그램
+
+```
+[Phase 1~3: 사용자 입력]
+  ↓
+[클라이언트 계산] (API 없음)
+  calcScores() → 6축 점수
+  getType() → 유형 코드
+  getLitLevel() → 리터러시 레벨
+  ↓
+[Call 1: /api/generate] → Claude API → 개인 리포트 마크다운
+  ↓
+[Call 2: /api/generate] → Claude API → {이름}.md
+  ↓
+[화면 렌더] mdToHtml() 변환 + 코드블록 표시
+  ↓
+[zip 생성] JSZip → 브라우저 다운로드
+
+(팀의 경우 추가):
+  ↓
+[Supabase] 개인 결과 임시 저장 → 전원 완료 대기
+  ↓
+[crossAnalyze()] 클라이언트에서 교차 분석
+  ↓
+[Call 3: /api/generate] → 팀 리포트
+[Call 4: /api/generate] → CLAUDE.md + {이름}.md 보강
+  ↓
+[팀 zip 생성] → Resend로 오너 이메일 또는 직접 다운로드
 ```
