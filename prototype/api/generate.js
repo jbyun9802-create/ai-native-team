@@ -1,3 +1,7 @@
+export const config = {
+  maxDuration: 120,
+};
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -22,7 +26,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: max_tokens || 8000,
+        max_tokens: max_tokens || 4096,
         system,
         messages,
       }),

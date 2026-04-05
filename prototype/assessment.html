@@ -468,14 +468,15 @@ async function generateReport(){
 - 축5 소통스타일: Explicit(E) vs Implicit(I)
 - 축6 갈등대처: Firm(F) vs Bridging(B)`;
 
-  const userPrompt=`아래 테스트 결과를 분석하여 두 개의 마크다운 문서를 생성해주세요.
+  // ===== CALL 1: 개인 리포트 =====
+  document.querySelector('#rptContent p')&&(document.querySelector('#rptContent p').textContent='Claude가 리포트를 생성하고 있습니다... (1/2)');
+
+  const reportPrompt=`아래 테스트 결과를 분석하여 개인 리포트를 마크다운으로 생성하세요.
 
 ## 테스트 데이터
 ${dataJson}
 
-## 문서 1: 개인 리포트 ({이름}-report.md)
-
-아래 구조로 작성. 각 섹션이 풍부하고 구체적이어야 합니다:
+## 리포트 구조 (각 섹션이 풍부하고 구체적이어야 합니다):
 
 ### 1. 유형 개요
 - 유형 코드와 의미 설명 (2-3 단락)
@@ -486,66 +487,76 @@ ${dataJson}
 
 ### 2. 축별 심층 분석 (6축 각각)
 각 축에 대해:
-- 점수가 의미하는 것 (추상적이 아닌 구체적 행동 예시)
+- 점수가 의미하는 것 (구체적 행동 예시)
 - ${S.role} 업무에 미치는 영향
 - 주의할 점
-- 같은 역할에서 반대 극의 사람과의 차이
 
 ### 3. AI 리터러시 분석
 - Lv${lit.lv}의 의미 + 유형과 결합 해석
 - 다음 레벨로 가기 위한 구체적 행동 3가지
 
 ### 4. ${S.role} 핵심 업무별 AI 활용 가이드
-${S.role}의 핵심 업무 8-10개 각각에 대해:
+${S.role}의 핵심 업무 8개 각각에 대해:
 - 이 유형이면 이 업무를 이렇게 하세요 (구체적)
 - STOP/THINK 여부와 이유
 
 ### 5. 위험 패턴 & 방지법
 유형에서 도출된 함정 3-4가지. 각각:
-- 패턴 설명
-- 감지 조건 (Claude가 감지할 수 있는 구체적 신호)
-- Claude가 할 경고 메시지
+- 패턴 설명 + 감지 조건 + Claude가 할 경고
 
 ### 6. 성장 추천
-약한 축을 키우는 구체적 행동 3가지
+약한 축을 키우는 구체적 행동 3가지`;
 
----
+  const reportResult = await callClaude(systemPrompt, reportPrompt);
+  const reportMd = reportResult || '(리포트 생성 실패)';
+  S.generatedReport = reportMd;
 
-## 문서 2: {이름}.md (Claude Code 사고 강제 룰)
+  // ===== CALL 2: {이름}.md =====
+  document.querySelector('#rptContent p')&&(document.querySelector('#rptContent p').textContent=`${S.name}.md를 생성하고 있습니다... (2/2)`);
 
+  const mdPrompt=`아래 테스트 결과를 분석하여 Claude Code 사고 강제 룰 파일을 생성하세요.
 이 파일은 Claude Code가 세션 시작 시 읽고 그대로 따르는 룰입니다.
-반드시 아래 구조로, Claude Code가 실행할 수 있는 구체적 지시문으로 작성하세요:
+Claude Code가 실행할 수 있는 구체적 지시문으로 작성하세요.
 
-\`\`\`
+## 테스트 데이터
+${dataJson}
+
+## 파일 구조:
+
 # ${S.name} — ${S.role} · ${typeStr} · AI 리터러시 Lv${lit.lv}
 
 ## 이 파일의 목적
-[이 사람의 핵심 특성 + 강점이 곧 함정이 되는 패턴]
+[이 사람의 핵심 특성 2-3문장 + 강점이 곧 함정이 되는 패턴 1-2문장]
 
 ## 🔴 STOP — 반드시 ${S.name}이 먼저 판단해야 하는 순간
-[각 STOP마다: 트리거 키워드 + "멈추고 물어보세요:" + 구체적 질문 3-4개 + "답한 후에만 진행"]
-최소 3개의 STOP 상황.
+최소 3개의 STOP 상황. 각각:
+- 트리거 키워드 (어떤 요청이 오면)
+- "멈추고 물어보세요:" + 구체적 질문 3-4개
+- "${S.name}이 답한 후에만 진행"
 
 ## 🟡 THINK — 단계별 사고가 필요한 업무
-[각 업무마다: Step 1~4 구체적 질문 + 건너뛰려 하면 경고 메시지]
-최소 4개의 업무.
+최소 4개의 업무. 각각:
+- Step 1~4 구체적 질문
+- 각 단계에서 답을 듣고 다음으로
+- 건너뛰려 하면 경고 메시지
 
 ## 결과물 작성 시 — 받는 사람 고려
-[가상 팀원 3명에 대해 유형 기반 맞춤 가이드]
+가상 팀원 3명 (Engineering ADTC, Design AGEL-IB, UXR SGTC-EF)에 대해:
+- 이 사람의 유형 특성
+- 결과물에 반드시 포함할 것
+- 주의할 것
 
 ## traces 저장 룰
-/save 실행 시 포함할 것: 결정사항+이유, 기각한 대안, 다음에 알아야 할 것
+/save 실행 시 포함할 것
 
 ## ⚠️ 함정 패턴
-[각 패턴: 설명 + 감지 조건 + Claude가 할 말]
-\`\`\`
+최소 3개. 각각: 설명 + 감지 조건 + Claude가 할 말`;
 
----
+  const mdResult = await callClaude(systemPrompt, mdPrompt);
+  const nameMd = mdResult || '(md 생성 실패)';
+  S.generatedMd = nameMd;
 
-두 문서를 ===REPORT_START===와 ===REPORT_END===, ===MD_START===와 ===MD_END===로 구분해주세요.`;
-
-  // Call Claude API
-  const result = await callClaude(systemPrompt, userPrompt);
+  const result = reportResult; // for error check below
 
   if(!result){
     document.getElementById('rptContent').innerHTML=`
