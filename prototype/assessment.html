@@ -811,8 +811,18 @@ function generateTeamReport(){
     <div class="nv">
       <button class="bt bg" onclick="showPhase(5)">← 팀 관리</button>
       <button class="bt bp" onclick="showGithubModal('team')">🔗 GitHub에 팀 결과 저장</button>
+      <button class="bt bp" style="background:#22c55e" onclick="goToBrain()">🧠 팀 브레인 열기 →</button>
     </div>
   `;
+}
+
+function goToBrain(){
+  const roleMap={'PM':'pm','Engineering':'engineering','Design':'design','UX Research':'uxr','Growth':'gtm'};
+  const role=roleMap[S.role]||'pm';
+  const name=S.name||'';
+  localStorage.setItem('tb_name',name);
+  localStorage.setItem('tb_role',role);
+  location.href='/brain.html?name='+encodeURIComponent(name)+'&role='+role;
 }
 
 // ===== GITHUB PUSH (SIMULATION) =====

@@ -3,7 +3,10 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-const PORT = 3001;
+const tracesHandler = require('./api/traces');
+const contextHandler = require('./api/context');
+
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 
 const MIME = {
@@ -19,6 +22,14 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
+
+  // New API endpoints (delegated to api/*.js handlers)
+  if (req.method === 'GET' && req.url.startsWith('/api/traces')) {
+    return tracesHandler(req, res);
+  }
+  if (req.method === 'GET' && req.url.startsWith('/api/context')) {
+    return contextHandler(req, res);
+  }
 
   // API proxy
   if (req.method === 'POST' && req.url === '/api/generate') {
